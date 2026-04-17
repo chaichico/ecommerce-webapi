@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Data;
-
+using Controllers;
 var builder = WebApplication.CreateBuilder(args);
 
 // DbContext
@@ -19,13 +19,14 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// if (app.Environment.IsDevelopment())
+// {
+app.UseSwagger();
+app.UseSwaggerUI();
+// }
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
 app.Run();
