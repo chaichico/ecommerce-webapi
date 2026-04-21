@@ -304,19 +304,20 @@ exit
 ## 📝 Checklist
 
 ### สำหรับ Local Development
-- [ ] สร้างไฟล์ `.env` จาก `.env.example`
-- [ ] แก้ `DB_SERVER=localhost` (หรือ `.\SQLEXPRESS`)
-- [ ] ติดตั้ง package `DotNetEnv`
-- [ ] แก้ `Program.cs` ให้อ่าน environment variables
-- [ ] ลบ connection string จาก `appsettings.json`
+- [x] สร้างไฟล์ `.env` จาก `.env.example`
+- [x] แก้ `DB_SERVER=localhost` (หรือ `.\SQLEXPRESS`)
+- [x] ติดตั้ง package `DotNetEnv`
+- [x] แก้ `Program.cs` ให้อ่าน environment variables
+- [x] ลบ connection string จาก `appsettings.json`
 - [ ] Run `dotnet ef database update`
 - [ ] Run `dotnet run`
 - [ ] ทดสอบ API ที่ http://localhost:5000/swagger
 
 ### สำหรับ Docker
-- [ ] สร้างไฟล์ `.env` จาก `.env.example`
-- [ ] แก้ `DB_SERVER=db`
-- [ ] Update `docker-compose.yml` ให้ pass environment variables
+- [x] สร้างไฟล์ `.env` จาก `.env.example`
+- [x] แก้ `DB_SERVER=db` (ใน docker-compose.yml)
+- [x] Update `docker-compose.yml` ให้ pass environment variables
+- [x] เพิ่ม volume สำหรับ SQL Server data persistence
 - [ ] Run `docker-compose up -d`
 - [ ] รอ SQL Server พร้อม (ดู logs)
 - [ ] Run `dotnet ef database update` (จาก host)
@@ -324,8 +325,8 @@ exit
 - [ ] ทดสอบ API ที่ http://localhost:8080/swagger
 
 ### สำหรับส่งงาน
-- [ ] ตรวจสอบว่า `.env` อยู่ใน `.gitignore`
-- [ ] มีไฟล์ `.env.example` พร้อม comments
+- [x] ตรวจสอบว่า `.env` อยู่ใน `.gitignore`
+- [x] มีไฟล์ `.env.example` พร้อม comments
 - [ ] เขียน README.md อธิบายวิธี setup
 - [ ] ทดสอบ `docker-compose up` ใหม่ทั้งระบบ
 - [ ] ทดสอบทุก API endpoints

@@ -16,9 +16,13 @@
 
 ### 3. Environment Variables & Configuration
 - [x] สร้างไฟล์ .gitignore
-- [ ] สร้างไฟล์ .env.example พร้อม template
-- [ ] กำหนดค่า Connection String ใน appsettings
-- [ ] เพิ่มตัวแปร Admin credentials ใน ENV
+- [x] สร้างไฟล์ .env.example พร้อม template
+- [x] กำหนดค่า Connection String แบบ dynamic จาก ENV
+- [x] เพิ่มตัวแปร Admin credentials ใน ENV
+- [x] เพิ่มตัวแปร JWT configuration ใน ENV
+- [x] เพิ่มตัวแปร Encryption Key ใน ENV
+- [x] ติดตั้ง DotNetEnv package
+- [x] แก้ไข Program.cs ให้อ่าน .env file
 
 ### 4. Dockerfile
 - [x] สร้าง Dockerfile
@@ -31,6 +35,8 @@
 - [x] กำหนด Web API ให้ run ที่ port 8080
 - [x] เพิ่ม SQL Server service
 - [x] กำหนด dependencies ระหว่าง services
+- [x] Pass environment variables ไปยัง containers
+- [x] เพิ่ม volume สำหรับ SQL Server data persistence
 
 ### 6. JWT Authentication & Authorization
 - [ ] ติดตั้ง JWT packages
