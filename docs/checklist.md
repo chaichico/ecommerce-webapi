@@ -76,10 +76,10 @@
 - [x] เพิ่ม Data Annotations และ Validations
 
 ### 1. Seed Data Function
-- [ ] สร้าง Seed Data Service
-- [ ] Seed Product Items (Auto)
-- [ ] Seed Product Status Reference (Auto)
-- [ ] ตรวจสอบ empty collection ก่อน seed
+- [x] สร้าง Seed Data Service
+- [x] Seed Product Items (Auto)
+- [x] Seed Product Status Reference (Auto)
+- [x] ตรวจสอบ empty collection ก่อน seed
 
 ### 2. User Registration (API Create User)
 - [ ] สร้าง UserController/AuthController
@@ -213,6 +213,7 @@
 - ✅ Docker Compose (Port 8080, SQL Server)
 - ✅ Swagger/OpenAPI Setup
 - ✅ .gitignore
+- ✅ Seed Data Function (DbSeeder)
 
 **กำลังดำเนินการ:**
 - 🔄 Controllers (มีเพียง UsersController แบบ basic)
@@ -223,7 +224,6 @@
 - ❌ Repositories Layer
 - ❌ JWT Authentication
 - ❌ Basic Authentication
-- ❌ Seed Data
 - ❌ All Business Logic APIs
 - ❌ Encryption (Phone, Password)
 - ❌ .env.example configuration
@@ -231,4 +231,4 @@
 
 ---
 
-**อัพเดทล่าสุด:** 21 เมษายน 2026
+**อัพเดทล่าสุด:** 22 เมษายน 2026
