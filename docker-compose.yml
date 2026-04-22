@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  webapi:
+    build: .
+    container_name: ecommerce-api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DB_SERVER=db
+      - DB_PORT=1433
+      - DB_NAME=EcommerceDb
+      - DB_USER=sa
+      - DB_PASSWORD=YourStrong!Pass123
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=Admin@123
+      - JWT_SECRET=YourSuperSecretKeyForJWT_MinimumLength32Characters!
+      - JWT_ISSUER=EcommerceAPI
+      - JWT_AUDIENCE=EcommerceClient
+      - JWT_EXPIRY_MINUTES=60
+      - ENCRYPTION_KEY=YourEncryptionKey32CharactersLong!
+    depends_on:
+      - db
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - SA_PASSWORD=YourStrong!Pass123
+      - ACCEPT_EULA=Y
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+volumes:
+  sqlserver_data:
