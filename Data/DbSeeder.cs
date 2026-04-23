@@ -135,7 +135,7 @@ public static class DbSeeder
             new OrderItem
             {
                 OrderId = orders[0].Id,
-                ProductId = products[1].Id.ToString(),
+                ProductId = products[1].Id,
                 ProductName = products[1].ProductName,
                 Quantity = 1,
                 UnitPrice = products[1].Price
@@ -143,7 +143,7 @@ public static class DbSeeder
             new OrderItem
             {
                 OrderId = orders[0].Id,
-                ProductId = products[3].Id.ToString(),
+                ProductId = products[3].Id,
                 ProductName = products[3].ProductName,
                 Quantity = 1,
                 UnitPrice = products[3].Price
@@ -152,7 +152,7 @@ public static class DbSeeder
             new OrderItem
             {
                 OrderId = orders[1].Id,
-                ProductId = products[0].Id.ToString(),
+                ProductId = products[0].Id,
                 ProductName = products[0].ProductName,
                 Quantity = 1,
                 UnitPrice = products[0].Price
@@ -161,7 +161,7 @@ public static class DbSeeder
             new OrderItem
             {
                 OrderId = orders[2].Id,
-                ProductId = products[4].Id.ToString(),
+                ProductId = products[4].Id,
                 ProductName = products[4].ProductName,
                 Quantity = 1,
                 UnitPrice = products[4].Price
@@ -169,7 +169,7 @@ public static class DbSeeder
             new OrderItem
             {
                 OrderId = orders[2].Id,
-                ProductId = products[3].Id.ToString(),
+                ProductId = products[3].Id,
                 ProductName = products[3].ProductName,
                 Quantity = 1,
                 UnitPrice = products[3].Price

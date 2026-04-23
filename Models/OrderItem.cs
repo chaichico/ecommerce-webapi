@@ -16,7 +16,7 @@ public class OrderItem
 
     // Product
     [Required]
-    public string ProductId {get; set;} = string.Empty;
+    public int ProductId {get; set;}
 
     [Required]
     public string ProductName {get; set;} = string.Empty;
