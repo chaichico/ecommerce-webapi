@@ -41,14 +41,14 @@ namespace Repositories.Interfaces;
 public interface IOrderRepository
 {
     Task<Order> CreateAsync(Order order);
-    Task<Order?> GetByOrderNumberAsync(string orderNumber);
-    Task<Order> UpdateAsync(Order order);   // ← เพิ่มบรรทัดนี้
+    Task<Order?> GetByIdAsync(int id);          // ← เพิ่มบรรทัดนี้
+    Task<Order> UpdateAsync(Order order);       // ← เพิ่มบรรทัดนี้
 }
 ```
 
 **จุดสำคัญ:**
+- `GetByIdAsync` ดึง order ด้วย primary key พร้อม Include Items
 - `UpdateAsync` รับ `Order` entity ที่แก้ไขแล้ว และ save ลง DB
-- `GetByOrderNumberAsync` ที่มีอยู่แล้วใช้ดึง order ก่อน update ได้เลย
 
 ---
 
@@ -78,12 +78,12 @@ public class OrderRepository : IOrderRepository
         return order;
     }
 
-    public async Task<Order?> GetByOrderNumberAsync(string orderNumber)
+    public async Task<Order?> GetByIdAsync(int id)   // ← เพิ่ม method นี้
     {
         return await _context.Orders
             .Include(o => o.Items)
             .Include(o => o.User)
-            .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
+            .FirstOrDefaultAsync(o => o.Id == id);
     }
 
     public async Task<Order> UpdateAsync(Order order)   // ← เพิ่ม method นี้
@@ -111,12 +111,12 @@ namespace Services.Interfaces;
 public interface IOrderService
 {
     Task<OrderResponseDto> CreateOrderAsync(CreateOrderDto dto, string userEmail);
-    Task<OrderResponseDto> UpdateOrderAsync(string orderNumber, UpdateOrderDto dto, string userEmail);   // ← เพิ่มบรรทัดนี้
+    Task<OrderResponseDto> UpdateOrderAsync(int id, UpdateOrderDto dto, string userEmail);   // ← เพิ่มบรรทัดนี้
 }
 ```
 
 **จุดสำคัญ:**
-- รับ `orderNumber` จาก route parameter
+- รับ `id` (Order primary key) จาก route parameter
 - รับ `userEmail` จาก JWT claim ใน Controller (ป้องกันไม่ให้ user แก้ order คนอื่น)
 
 ---
@@ -124,7 +124,7 @@ public interface IOrderService
 ### 5️⃣ **Services/OrderService.cs** — implement UpdateOrderAsync
 
 ```csharp
-public async Task<OrderResponseDto> UpdateOrderAsync(string orderNumber, UpdateOrderDto dto, string userEmail)
+public async Task<OrderResponseDto> UpdateOrderAsync(int id, UpdateOrderDto dto, string userEmail)
 {
     // 1. หา user จาก email (ดึงมาจาก JWT claim)
     User? user = await _context.Users
@@ -134,8 +134,8 @@ public async Task<OrderResponseDto> UpdateOrderAsync(string orderNumber, UpdateO
         throw new UnauthorizedAccessException("User not found");
     }
 
-    // 2. หา order จาก OrderNumber พร้อม Include Items
-    Order? order = await _orderRepository.GetByOrderNumberAsync(orderNumber);
+    // 2. หา order จาก Id พร้อม Include Items
+    Order? order = await _orderRepository.GetByIdAsync(id);
     if (order == null)
     {
         throw new KeyNotFoundException("Order not found");
@@ -144,7 +144,7 @@ public async Task<OrderResponseDto> UpdateOrderAsync(string orderNumber, UpdateO
     // 3. ตรวจสอบว่า order เป็นของ user คนนี้
     if (order.UserId != user.Id)
     {
-        throw new UnauthorizedAccessException("You are not authorized to update this order");
+        throw new System.Security.SecurityException("You are not authorized to update this order");
     }
 
     // 4. ตรวจสอบว่า order ยัง Pending อยู่ (ถ้า Confirmed แล้วแก้ไม่ได้)
@@ -254,7 +254,7 @@ public class OrdersController : ControllerBase
         try
         {
             OrderResponseDto result = await _orderService.CreateOrderAsync(dto, userEmail);
-            return Ok(result);
+            return StatusCode(201, result);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -266,9 +266,9 @@ public class OrdersController : ControllerBase
         }
     }
 
-    // PUT /api/orders/{orderNumber}   ← เพิ่ม endpoint นี้
-    [HttpPut("{orderNumber}")]
-    public async Task<IActionResult> UpdateOrder(string orderNumber, [FromBody] UpdateOrderDto dto)
+    // PUT /api/orders/{id}   ← เพิ่ม endpoint นี้
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateOrder(int id, [FromBody] UpdateOrderDto dto)
     {
         string? userEmail = User.FindFirst(ClaimTypes.Email)?.Value
                             ?? User.FindFirst("sub")?.Value;
@@ -278,12 +278,16 @@ public class OrdersController : ControllerBase
 
         try
         {
-            OrderResponseDto result = await _orderService.UpdateOrderAsync(orderNumber, dto, userEmail);
+            OrderResponseDto result = await _orderService.UpdateOrderAsync(id, dto, userEmail);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+        catch (System.Security.SecurityException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -302,8 +306,8 @@ public class OrdersController : ControllerBase
 ```
 
 **จุดสำคัญ:**
-- Route: `PUT /api/orders/{orderNumber}` — ส่ง OrderNumber ผ่าน URL
-- `[HttpPut("{orderNumber}")]` — รับ orderNumber จาก route parameter
+- Route: `PUT /api/orders/{id}` — ส่ง Order Id (int) ผ่าน URL
+- `[HttpPut("{id}")]` — รับ id จาก route parameter
 - แยก exception แต่ละ type เพื่อ return HTTP status code ที่ถูกต้อง
   - `KeyNotFoundException` → `404 Not Found`
   - `UnauthorizedAccessException` → `401 Unauthorized`
@@ -320,7 +324,7 @@ public class OrdersController : ControllerBase
 | `Repositories/OrderRepository.cs` | ✏️ แก้ไข (implement `UpdateAsync`) |
 | `Services/Interfaces/IOrderService.cs` | ✏️ แก้ไข (เพิ่ม `UpdateOrderAsync`) |
 | `Services/OrderService.cs` | ✏️ แก้ไข (implement `UpdateOrderAsync`) |
-| `Controllers/OrdersController.cs` | ✏️ แก้ไข (เพิ่ม `PUT /{orderNumber}`) |
+| `Controllers/OrdersController.cs` | ✏️ แก้ไข (เพิ่ม `PUT /{id}`) |
 
 > **หมายเหตุ:** `Program.cs` ไม่ต้องแก้ไข เพราะ `IOrderRepository` และ `IOrderService` ลง register ไว้แล้วตอน Create Order
 
@@ -331,7 +335,7 @@ public class OrdersController : ControllerBase
 ### Request
 
 ```http
-PUT /api/orders/ORD-20260424-A1B2C3D4
+PUT /api/orders/1
 Authorization: Bearer <JWT_TOKEN_FROM_LOGIN>
 Content-Type: application/json
 
@@ -375,8 +379,8 @@ Content-Type: application/json
 | สถานการณ์ | HTTP Status | Message |
 |-----------|-------------|---------|
 | ไม่มี JWT token | `401` | `"Invalid token"` |
-| OrderNumber ไม่มีในระบบ | `404` | `"Order not found"` |
-| Order เป็นของ user อื่น | `401` | `"You are not authorized to update this order"` |
+| Order Id ไม่มีในระบบ | `404` | `"Order not found"` |
+| Order เป็นของ user อื่น | `403` | `"You are not authorized to update this order"` |
 | Order ไม่ใช่สถานะ Pending | `400` | `"Only pending orders can be updated"` |
 | Product ไม่มีในระบบหรือ inactive | `400` | `"One or more products not found or inactive"` |
 

@@ -4,7 +4,7 @@
 ## Technical Requirement 
 1 พัฒนา Web API ด้วย .NET10 และใช้ ฐานข้อมูลชนิดใด ก็ได้ไม่ว่าจะเป็น SQL หรือ NoSQL โดยใช้ Framework ORM ในการเชื่อมต่อ
 2 Web API ต้องพัฒนาให้อยู่ในรูปแบบของ REST API ตาม Spec OpenAPI Specification ในปัจจุบัน
-3 จงกำหนดค่าตัวแปร ของ Application ด้วย file ENV  และ gitignore   
+3 จงกำหนดค่าตัวแปร ของ Application ด้วย file appsetting.json  และ gitignore   
 4 จงเขียน Dockerfile และ เลือกใช้ Base Image ที่เหมาะสมและ กิน resource น้อย 
 5 จงเขียน Docker-compose เพื่อ Run ระบบ โดย กำหนดให้ Web API  Run ที่Port  8080  
 6 เมื่อ Login แล้ว ให้สร้าง JWT token สำหรับ User  ในการทำ api Authentication and Authorization ของ API ที่ Required การauthentication and authorization 

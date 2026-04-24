@@ -21,11 +21,18 @@ public class OrderRepository : IOrderRepository
         return order; 
     }
 
-    public async Task<Order?> GetByOrderNumberAsync(string orderNumber)
+    public async Task<Order?> GetByOrderIdAsync(int id)
     {
         return await _context.Orders
             .Include(o => o.Items) // รวม OrderItems ด้วย
             .Include(o => o.User)  // รวม User ด้วย
-            .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
+            .FirstOrDefaultAsync(o => o.Id == id);
+    }
+
+    public async Task<Order> UpdateAsync(Order order)
+    {
+        _context.Orders.Update(order); // EF core track changes ของ Order แลพ items
+        await _context.SaveChangesAsync();
+        return order;
     }
 }

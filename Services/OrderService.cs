@@ -91,6 +91,90 @@ public class OrderService : IOrderService
             }).ToList()
         };
     }
+
+    public async Task<OrderResponseDto> UpdateOrderAsync(int id, UpdateOrderDto dto, string userEmail)
+    {
+        // 1 find User from email
+        User? user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == userEmail);
+        if (user == null)
+        {
+            throw new UnauthorizedAccessException("User not found");
+        }
+
+        // 2 find User from Id and Include Items
+        Order? order = await _orderRepository.GetByOrderIdAsync(id);
+        if (order == null)
+        {
+            throw new KeyNotFoundException("Order not found");
+        }
+
+        // 3 check if User is the owner of this Order
+        if (order.UserId != user.Id)
+        {
+            throw new System.Security.SecurityException("You are not authorized to update this order");
+        }
+        // 4 check if order is still Pending
+        if (order.Status != "Pending")
+        {
+            throw new InvalidOperationException("Only pending orders can be updated");
+        }
+
+        // 5 check and pull every Products from Database
+        List<int> productIds = dto.Items.Select(i => i.ProductId).ToList();
+        List<Product> products = await _context.Products
+            .Where(p => productIds.Contains(p.Id) && p.IsActive)
+            .ToListAsync();
+
+        if (products.Count != productIds.Count)
+        {
+            throw new Exception("One or more products not found or inactive");
+        }
+
+        // 6 delete old items and replace with new one
+        _context.Set<OrderItem>().RemoveRange(order.Items);
+
+        List<OrderItem> newItems = dto.Items.Select(item =>
+        {
+            Product product = products.First(p => p.Id == item.ProductId);
+            return new OrderItem
+            {
+                OrderId = order.Id,
+                ProductId = product.Id,
+                ProductName = product.ProductName,
+                Quantity = item.Quantity,
+                UnitPrice = product.Price
+            };
+        }).ToList();
+
+        // 7 calculate TotalPrice again
+        decimal totalPrice = newItems.Sum(i => i.UnitPrice * i.Quantity);
+
+        // 8 update order entity
+        order.Items = newItems;
+        order.TotalPrice = totalPrice;
+
+        // 9 save changes to database
+        await _orderRepository.UpdateAsync(order);
+
+        // 10 return response
+        return new OrderResponseDto
+        {
+            OrderNumber = order.OrderNumber,
+            OrderDate = order.OrderDate,
+            Status = order.Status,
+            TotalPrice = order.TotalPrice,
+            Items = newItems.Select(i => new OrderItemResponseDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                SubTotal = i.SubTotal
+            }).ToList()
+        };
+
+    }
 }
 
 // - `userEmail` มาจาก JWT claim — ไม่รับจาก request body
