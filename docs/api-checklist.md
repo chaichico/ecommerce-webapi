@@ -27,7 +27,7 @@
 - **Response**: JWT Token พร้อม User Info (Email, ชื่อ, นามสกุล)
 - **Status**: ✅ เสร็จแล้ว
 
-### 3. Create Order []
+### 3. Create Order [x]
 - **Endpoint**: `POST /api/orders`
 - **Authentication**: JWT Token (required)
 - **Description**: สร้างคำสั่งซื้อสินค้าใหม่
@@ -36,7 +36,7 @@
     - Product Number
     - จำนวน item
 - **Response**: OrderNumber
-- **Status**: ⬜ ยังไม่เสร็จ
+- **Status**: ✅ เสร็จแล้ว
 
 ### 4. Update Order []
 - **Endpoint**: `PUT /api/orders/{orderNumber}`
@@ -85,9 +85,9 @@
 
 | หมวด | เสร็จแล้ว | ทั้งหมด | สถานะ |
 |------|-----------|---------|-------|
-| User APIs | 2 | 5 | 40% |
+| User APIs | 3 | 5 | 60% |
 | Admin APIs | 0 | 2 | 0% |
-| **รวม** | **2** | **7** | **29%** |
+| **รวม** | **3** | **7** | **43%** |
 
 ## 📝 หมายเหตุ
 
