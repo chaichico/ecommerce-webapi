@@ -1,5 +1,5 @@
 using Data;
-using Interfaces;
+using Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Models;
 namespace Repositories;

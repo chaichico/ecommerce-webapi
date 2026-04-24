@@ -1,5 +1,5 @@
 using Models.Dtos;
-namespace Interfaces;
+namespace Services.Interfaces;
 
 public interface IUserService
 {

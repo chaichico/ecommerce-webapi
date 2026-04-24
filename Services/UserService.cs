@@ -1,4 +1,4 @@
-using Interfaces;
+using Services.Interfaces;
 using Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Models.Dtos;
+using Repositories.Interfaces;
 namespace Services;
 
 public class UserService : IUserService

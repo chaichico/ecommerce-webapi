@@ -1,5 +1,3 @@
-using Models.Dtos;
-
 namespace Models.Dtos;
 
 public class LoginResponseDto

@@ -1,4 +1,4 @@
-namespace Interfaces;
+namespace Repositories.Interfaces;
 using Models;
 public interface IUserRepository
 {

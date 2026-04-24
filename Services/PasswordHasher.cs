@@ -1,7 +1,7 @@
 namespace Services;
 
 using System.Security.Cryptography;
-using Interfaces;
+using Services.Interfaces;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 public class PasswordHasher : IPasswordHasher

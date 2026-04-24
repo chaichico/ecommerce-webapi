@@ -1,4 +1,4 @@
-namespace Interfaces;
+namespace Services.Interfaces;
 // Interface for Hashing
 public interface IPasswordHasher
 {

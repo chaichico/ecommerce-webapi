@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Data;
-using Interfaces;
+using Services.Interfaces;
+using Repositories.Interfaces;
 using Repositories;
 using Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,11 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // DbContext - Use environment variable for server or fallback to config
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var dbServer = builder.Configuration["DB_SERVER"];
-if (!string.IsNullOrEmpty(dbServer))
-{
-    connectionString = $"Server={dbServer},{builder.Configuration["DB_PORT"] ?? "1433"};Database={builder.Configuration["DB_NAME"] ?? "EcommerceDb"};User={builder.Configuration["DB_USER"] ?? "sa"};Password={builder.Configuration["DB_PASSWORD"]};TrustServerCertificate=True;";
-}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString)

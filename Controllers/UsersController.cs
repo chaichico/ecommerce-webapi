@@ -1,8 +1,8 @@
-namespace Controllers;
-using Interfaces;
+using Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Models.Dtos;
 
+namespace Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
