@@ -27,7 +27,7 @@
 - **Response**: JWT Token พร้อม User Info (Email, ชื่อ, นามสกุล)
 - **Status**: ✅ เสร็จแล้ว
 
-### 3. Create Order []
+### 3. Create Order [x]
 - **Endpoint**: `POST /api/orders`
 - **Authentication**: JWT Token (required)
 - **Description**: สร้างคำสั่งซื้อสินค้าใหม่
@@ -36,7 +36,7 @@
     - Product Number
     - จำนวน item
 - **Response**: OrderNumber
-- **Status**: ⬜ ยังไม่เสร็จ
+- **Status**: ✅ เสร็จแล้ว
 
 ### 4. Update Order []
 - **Endpoint**: `PUT /api/orders/{orderNumber}`
@@ -83,14 +83,17 @@
 
 ## 📊 สรุป
 
-- **User APIs**: 5 endpoints
-- **Admin APIs**: 2 endpoints
-- **รวมทั้งหมด**: 7 endpoints
+| หมวด | เสร็จแล้ว | ทั้งหมด | สถานะ |
+|------|-----------|---------|-------|
+| User APIs | 3 | 5 | 60% |
+| Admin APIs | 0 | 2 | 0% |
+| **รวม** | **3** | **7** | **43%** |
 
 ## 📝 หมายเหตุ
 
 - User APIs ใช้ JWT Token สำหรับ Authentication และ Authorization
 - Admin APIs ใช้ Basic Authentication (username และ password จาก ENV)
-- ต้องมี Function Seed Data สำหรับ Product และ Product Status Reference
-- Password ต้อง Hash ด้วย Hashing Encryption
-- เบอร์โทรต้อง Encrypt ด้วย Symmetric Encryption (optional)
+- ✅ Seed Data สำหรับ Users, Products, Orders, OrderItems — implement แล้วใน `Data/DbSeeder.cs` และเรียกใน `Program.cs`
+- ✅ Password Hash ด้วย Hashing Encryption — implement แล้วใน `Services/PasswordHasher.cs`
+- ✅ เบอร์โทร Encrypt ด้วย Symmetric Encryption — implement แล้วใน `Services/EncryptionService.cs`
+- ✅ JWT Authentication — configure แล้วใน `Program.cs`
