@@ -66,6 +66,15 @@ builder.Services.AddSwaggerGen(options =>
         Description = "ใส่ JWT Token"
     });
 
+    options.AddSecurityDefinition("Basic", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "basic",
+        In = ParameterLocation.Header,
+        Description = "ใส่ username และ password สำหรับ Admin"
+    });
+
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {

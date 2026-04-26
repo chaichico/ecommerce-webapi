@@ -10,19 +10,19 @@
 
 ### 2. REST API ตาม OpenAPI Specification
 - [x] ติดตั้ง Swagger/OpenAPI
-- [x] กำหนดค่า Swagger ใน Program.cs
-- [ ] สร้าง API Controllers ตาม spec ครบถ้วน
-- [ ] เพิ่ม API Documentation/Comments
+- [x] กำหนดค่า Swagger ใน Program.cs (รวม Bearer token support)
+- [x] สร้าง API Controllers ตาม spec ครบถ้วน (UsersController, OrdersController, AdminController)
+- [ ] เพิ่ม API Documentation/Comments (XML comments ยังไม่มี)
 
 ### 3. Environment Variables & Configuration
 - [x] สร้างไฟล์ .gitignore
-- [x] สร้างไฟล์ .env.example พร้อม template
-- [x] กำหนดค่า Connection String แบบ dynamic จาก ENV
-- [x] เพิ่มตัวแปร Admin credentials ใน ENV
-- [x] เพิ่มตัวแปร JWT configuration ใน ENV
-- [x] เพิ่มตัวแปร Encryption Key ใน ENV
-- [x] ติดตั้ง DotNetEnv package
-- [x] แก้ไข Program.cs ให้อ่าน .env file
+- [ ] สร้างไฟล์ .env.example พร้อม template (ไม่มี — ใช้ appsettings.json แทน)
+- [x] กำหนดค่า Connection String แบบ dynamic จาก appsettings.json / ENV
+- [x] เพิ่มตัวแปร Admin credentials ใน appsettings.json (AdminAuth section)
+- [x] เพิ่มตัวแปร JWT configuration ใน appsettings.json (Jwt section)
+- [x] เพิ่มตัวแปร Encryption Key ใน appsettings.json (Encryption section)
+- [ ] ติดตั้ง DotNetEnv package (ไม่ได้ใช้ — ใช้ appsettings.json แทน)
+- [ ] แก้ไข Program.cs ให้อ่าน .env file (ไม่ได้ทำ — ใช้ appsettings.json แทน)
 
 ### 4. Dockerfile
 - [x] สร้าง Dockerfile
@@ -39,12 +39,12 @@
 - [x] เพิ่ม volume สำหรับ SQL Server data persistence
 
 ### 6. JWT Authentication & Authorization
-- [ ] ติดตั้ง JWT packages
-- [ ] สร้าง JWT Token Service
-- [ ] กำหนดค่า JWT ใน Program.cs
-- [ ] เพิ่ม JWT Secret ใน ENV
-- [ ] Implement JWT Token generation ใน Login API
-- [ ] เพิ่ม [Authorize] attribute ใน protected endpoints
+- [x] ติดตั้ง JWT packages (Microsoft.AspNetCore.Authentication.JwtBearer)
+- [x] สร้าง JWT Token generation (GenerateJwtToken ใน UserService)
+- [x] กำหนดค่า JWT ใน Program.cs (AddAuthentication + AddJwtBearer)
+- [x] เพิ่ม JWT Secret ใน appsettings.json (Jwt:Key)
+- [x] Implement JWT Token generation ใน Login API
+- [x] เพิ่ม [Authorize] attribute ใน protected endpoints (OrdersController)
 
 ---
 
@@ -60,8 +60,8 @@
 ### 2. Code First & Database Migration
 - [x] ใช้ Code First approach
 - [x] สร้าง Migration files
-- [x] สร้าง Initial Migration
-- [ ] เพิ่ม Migration สำหรับ features ใหม่
+- [x] สร้าง Initial Migration (20260417090318_InitialCreate)
+- [x] เพิ่ม Migration สำหรับ features ใหม่ (20260423060405_FixOrderItemProductId)
 
 ---
 
@@ -76,101 +76,102 @@
 - [x] เพิ่ม Data Annotations และ Validations
 
 ### 1. Seed Data Function
-- [x] สร้าง Seed Data Service
+- [x] สร้าง Seed Data Service (DbSeeder.cs)
 - [x] Seed Product Items (Auto)
 - [x] Seed Product Status Reference (Auto)
 - [x] ตรวจสอบ empty collection ก่อน seed
 
 ### 2. User Registration (API Create User)
-- [ ] สร้าง UserController/AuthController
-- [ ] สร้าง RegisterDTO
-- [ ] Implement POST /api/users/register
-- [ ] Validate Email (unique, format)
-- [ ] Validate FirstName, LastName (required)
-- [ ] Validate PhoneNumber (optional)
-- [ ] **[คะแนนพิเศษ]** Encrypt PhoneNumber (Symmetric Encryption)
-- [ ] **[คะแนนพิเศษ]** Hash Password (Hashing)
-- [ ] **[คะแนนพิเศษ]** Validate ConfirmPassword
+- [x] สร้าง UsersController
+- [x] สร้าง RegisterUserDto
+- [x] Implement POST /api/users/register
+- [x] Validate Email (unique, format)
+- [x] Validate FirstName, LastName (required)
+- [x] Validate PhoneNumber (optional)
+- [x] **[คะแนนพิเศษ]** Encrypt PhoneNumber (Symmetric Encryption via EncryptionService)
+- [x] **[คะแนนพิเศษ]** Hash Password (Hashing via PasswordHasher)
+- [x] **[คะแนนพิเศษ]** Validate ConfirmPassword ([Compare] annotation)
 
 ### 3. User Login (API User Login)
-- [ ] สร้าง LoginDTO
-- [ ] Implement POST /api/auth/login
-- [ ] Validate Email & Password
-- [ ] Generate JWT Token
-- [ ] Include User Info in JWT Payload (Email, FirstName, LastName)
-- [ ] Return Token + User Info
+- [x] สร้าง LoginDto
+- [x] Implement POST /api/users/login
+- [x] Validate Email & Password
+- [x] Generate JWT Token
+- [x] Include User Info in JWT Payload (Email, FirstName, LastName)
+- [x] Return Token + User Info (LoginResponseDto)
 
 ### 4. Admin Search Orders (API Admin Search Order List)
-- [ ] สร้าง OrdersController (Admin)
-- [ ] Implement Basic Authentication Middleware
-- [ ] เพิ่ม Admin credentials ใน ENV
-- [ ] Implement GET /api/admin/orders
-- [ ] Search by OrderNumber
-- [ ] Search by User FirstName, LastName
-- [ ] Return Order List with Status (รอยืนยัน, ยืนยันแล้ว)
-- [ ] Include Order Details in response
+- [x] สร้าง AdminController
+- [x] Implement Basic Authentication (IsAuthorized helper ใน AdminController)
+- [x] เพิ่ม Admin credentials ใน appsettings.json (AdminAuth section)
+- [x] Implement GET /api/admin/orders
+- [x] Search by OrderNumber
+- [x] Search by User FirstName, LastName
+- [x] Return Order List with Status (รอยืนยัน, ยืนยันแล้ว)
+- [x] Include Order Details in response (AdminOrderResponseDto)
 
 ### 5. User Create Order (API User Create Order)
-- [ ] สร้าง CreateOrderDTO
-- [ ] Implement POST /api/orders
-- [ ] เพิ่ม JWT Authentication
-- [ ] รองรับหลาย Products ในคำสั่งซื้อเดียว
-- [ ] Validate Product Number & Quantity
-- [ ] Generate OrderNumber
-- [ ] Return OrderNumber + Order Details
+- [x] สร้าง CreateOrderDto + CreateOrderItemDto
+- [x] Implement POST /api/orders
+- [x] เพิ่ม JWT Authentication ([Authorize] บน OrdersController)
+- [x] รองรับหลาย Products ในคำสั่งซื้อเดียว
+- [x] Validate Product Number & Quantity (ตรวจ product active + exists)
+- [x] Generate OrderNumber (format: ORD-yyyyMMdd-XXXXXXXX)
+- [x] Return OrderNumber + Order Details (OrderResponseDto)
 
 ### 6. User Update Order (API User Update Order)
-- [ ] สร้าง UpdateOrderDTO
-- [ ] Implement PUT /api/orders/{orderNumber}
-- [ ] เพิ่ม JWT Authentication
-- [ ] Validate OrderNumber
-- [ ] Update Product Number & Quantity
-- [ ] ตรวจสอบ Order ownership (User เป็นเจ้าของ Order)
+- [x] สร้าง UpdateOrderDto
+- [x] Implement PUT /api/orders/{id}
+- [x] เพิ่ม JWT Authentication
+- [x] Validate Order exists
+- [x] Update Product Number & Quantity
+- [x] ตรวจสอบ Order ownership (User เป็นเจ้าของ Order)
 
 ### 7. User Confirm Order (API User Confirm Order)
-- [x] สร้าง ConfirmOrderDTO
-- [x] Implement POST /api/orders/{orderNumber}/confirm
+- [x] สร้าง ConfirmOrderDto
+- [x] Implement POST /api/orders/{id}/confirm
 - [x] เพิ่ม JWT Authentication
-- [x] Validate OrderNumber
+- [x] Validate Order exists
 - [x] เพิ่ม ShippingAddress
 - [x] Update Order Status
 
 ### 8. Admin Approve Orders (API Admin Approve Order)
-- [ ] สร้าง ApproveOrdersDTO
-- [ ] Implement POST /api/admin/orders/approve
-- [ ] เพิ่ม Basic Authentication
-- [ ] รองรับการ approve หลาย Orders พร้อมกัน
-- [ ] Update Status เป็น "ยืนยันคำสั่งซื้อ"
+- [x] สร้าง ApproveOrdersDto
+- [x] Implement POST /api/admin/orders/approve
+- [x] เพิ่ม Basic Authentication
+- [x] รองรับการ approve หลาย Orders พร้อมกัน
+- [x] Update Status เป็น "ยืนยันคำสั่งซื้อ"
 
 ---
 
 ## 🏗️ Architecture & Code Structure
 
 ### DTOs (Data Transfer Objects)
-- [ ] สร้าง RegisterDTO
-- [ ] สร้าง LoginDTO
-- [ ] สร้าง CreateOrderDTO
-- [ ] สร้าง UpdateOrderDTO
-- [x] สร้าง ConfirmOrderDTO
-- [ ] สร้าง ApproveOrdersDTO
-- [ ] สร้าง Response DTOs
+- [x] สร้าง RegisterUserDto
+- [x] สร้าง LoginDto + LoginResponseDto
+- [x] สร้าง CreateOrderDto + CreateOrderItemDto
+- [x] สร้าง UpdateOrderDto
+- [x] สร้าง ConfirmOrderDto
+- [x] สร้าง ApproveOrdersDto
+- [x] สร้าง Response DTOs (OrderResponseDto, UserResponseDto, AdminOrderResponseDto)
 
 ### Services Layer
-- [ ] สร้าง IUserService + UserService
-- [ ] สร้าง IAuthService + AuthService
-- [ ] สร้าง IOrderService + OrderService
-- [ ] สร้าง IProductService + ProductService
-- [ ] สร้าง IJwtService + JwtService
-- [ ] สร้าง IEncryptionService + EncryptionService (optional)
+- [x] สร้าง IUserService + UserService (รวม JWT generation)
+- [ ] สร้าง IAuthService + AuthService (Auth รวมอยู่ใน UserService แทน)
+- [x] สร้าง IOrderService + OrderService
+- [ ] สร้าง IProductService + ProductService (ไม่ได้สร้าง — access ผ่าน DbContext โดยตรง)
+- [ ] สร้าง IJwtService + JwtService (JWT รวมอยู่ใน UserService แทน)
+- [x] สร้าง IEncryptionService + EncryptionService
+- [x] สร้าง IPasswordHasher + PasswordHasher
 
 ### Repositories Layer
-- [ ] สร้าง IUserRepository + UserRepository
-- [ ] สร้าง IOrderRepository + OrderRepository
-- [ ] สร้าง IProductRepository + ProductRepository
+- [x] สร้าง IUserRepository + UserRepository
+- [x] สร้าง IOrderRepository + OrderRepository
+- [ ] สร้าง IProductRepository + ProductRepository (ไม่ได้สร้าง)
 - [ ] Implement Generic Repository Pattern (optional)
 
 ### Middleware
-- [ ] สร้าง Basic Authentication Middleware
+- [ ] สร้าง Basic Authentication Middleware (ใช้ IsAuthorized() helper method ใน AdminController แทน)
 - [ ] สร้าง Error Handling Middleware
 - [ ] สร้าง Logging Middleware (optional)
 
@@ -178,16 +179,16 @@
 
 ## ✅ Testing & Validation
 
-- [ ] ทดสอบ User Registration
-- [ ] ทดสอบ User Login + JWT
-- [ ] ทดสอบ Create Order
-- [ ] ทดสอบ Update Order
-- [ ] ทดสอบ Confirm Order
-- [ ] ทดสอบ Admin Search Orders
-- [ ] ทดสอบ Admin Approve Orders
-- [ ] ทดสอบ Basic Authentication
-- [ ] ทดสอบ JWT Authentication
-- [ ] ทดสอบ Seed Data
+- [x] ทดสอบ User Registration
+- [x] ทดสอบ User Login + JWT
+- [x] ทดสอบ Create Order
+- [x] ทดสอบ Update Order
+- [x] ทดสอบ Confirm Order
+- [x] ทดสอบ Admin Search Orders
+- [x] ทดสอบ Admin Approve Orders
+- [x] ทดสอบ Basic Authentication
+- [x] ทดสอบ JWT Authentication
+- [x] ทดสอบ Seed Data
 - [ ] ทดสอบ Docker Build
 - [ ] ทดสอบ Docker Compose
 
@@ -195,9 +196,9 @@
 
 ## 📝 Documentation
 
-- [ ] เขียน README.md
-- [ ] เขียน API Documentation
-- [ ] เขียน Setup Instructions
+- [x] เขียน README.md
+- [x] เขียน API Documentation (docs/ folder: api-*.md)
+- [ ] เพิ่ม Setup Instructions ใน README
 - [ ] เขียน Environment Variables Guide
 - [ ] เขียน Docker Instructions
 
@@ -231,4 +232,3 @@
 
 ---
 
-**อัพเดทล่าสุด:** 22 เมษายน 2026

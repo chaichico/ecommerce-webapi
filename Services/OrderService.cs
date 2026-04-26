@@ -229,6 +229,84 @@ public class OrderService : IOrderService
             }).ToList()
         };
     }
+
+    public async Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber)
+    {
+        List<Order> orders = await _orderRepository.SearchOrdersAsync(orderNumber);
+
+        return orders.Select(o => new AdminOrderResponseDto
+        {
+            OrderNumber = o.OrderNumber,
+            OrderDate = o.OrderDate,
+            Status = o.Status,
+            TotalPrice = o.TotalPrice,
+            ShippingAddress = o.ShippingAddress,
+            User = new AdminUserInfoDto
+            {
+                FirstName = o.User.FirstName,
+                LastName = o.User.LastName,
+                Email = o.User.Email
+            },
+            Items = o.Items.Select(i => new OrderItemResponseDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                SubTotal = i.SubTotal
+            }).ToList()
+        }).ToList();
+    }
+
+    public async Task<List<AdminOrderResponseDto>> ApproveOrdersAsync(ApproveOrdersDto dto)
+    {
+        // 1. ดึง orders ตาม OrderIds ที่ส่งมา
+        List<Order> orders = await _orderRepository.GetByIdsAsync(dto.OrderIds);
+
+        // 2. ตรวจสอบว่าพบ orders ทั้งหมดไหม
+        if (orders.Count != dto.OrderIds.Count)
+        {
+            List<int> foundIds = orders.Select(o => o.Id).ToList();
+            List<int> notFound = dto.OrderIds.Except(foundIds).ToList();
+            throw new KeyNotFoundException($"Orders not found: {string.Join(", ", notFound)}");
+        }
+
+        // 3. เปลี่ยน Status เป็น Confirmed เฉพาะที่ยัง Pending อยู่
+        foreach (Order order in orders)
+        {
+            if (order.Status == "Pending")
+            {
+                order.Status = "Confirmed";
+            }
+        }
+
+        // 4. บันทึกทั้งหมดใน batch เดียว
+        await _orderRepository.UpdateRangeAsync(orders);
+
+        // 5. Return response
+        return orders.Select(o => new AdminOrderResponseDto
+        {
+            OrderNumber = o.OrderNumber,
+            OrderDate = o.OrderDate,
+            Status = o.Status,
+            TotalPrice = o.TotalPrice,
+            ShippingAddress = o.ShippingAddress,
+            User = new AdminUserInfoDto
+            {
+                FirstName = o.User.FirstName,
+                LastName = o.User.LastName,
+                Email = o.User.Email
+            },
+            Items = o.Items.Select(i => new OrderItemResponseDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                SubTotal = i.SubTotal
+            }).ToList()
+        }).ToList();
+    }
 }
 
 // - `userEmail` มาจาก JWT claim — ไม่รับจาก request body

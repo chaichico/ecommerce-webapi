@@ -60,7 +60,7 @@
 
 ## 🔐 Admin APIs (ใช้ Basic Authentication)
 
-### 1. Search Order List []
+### 1. Search Order List [x]
 - **Endpoint**: `GET /api/admin/orders`
 - **Authentication**: Basic Authentication (required)
 - **Description**: ค้นหาและดูรายการคำสั่งซื้อทั้งหมด
@@ -69,16 +69,16 @@
   - ชื่อ (optional)
   - นามสกุล (optional)
 - **Response**: Order List พร้อมสถานะ (รอยืนยันคำสั่งซื้อ, ยืนยันคำสั่งซื้อ) และ Order Details
-- **Status**: ⬜ ยังไม่เสร็จ
+- **Status**: ✅ เสร็จแล้ว
 
-### 2. Approve Orders []
+### 2. Approve Orders [x]
 - **Endpoint**: `POST /api/admin/orders/approve`
 - **Authentication**: Basic Authentication (required)
 - **Description**: อนุมัติคำสั่งซื้อหลายรายการพร้อมกัน
 - **Request Body**:
-  - OrderNumbers (array)
-- **Response**: สถานะการอนุมัติ
-- **Status**: ⬜ ยังไม่เสร็จ
+  - OrderIds (array)
+- **Response**: รายการ Orders ที่ถูก approve พร้อม Order Details
+- **Status**: ✅ เสร็จแล้ว
 
 ---
 
@@ -87,8 +87,8 @@
 | หมวด | เสร็จแล้ว | ทั้งหมด | สถานะ |
 |------|-----------|---------|-------|
 | User APIs | 5 | 5 | 100% |
-| Admin APIs | 0 | 2 | 0% |
-| **รวม** | **5** | **7** | **71%** |
+| Admin APIs | 2 | 2 | 100% |
+| **รวม** | **7** | **7** | **100%** |
 
 ## 📝 หมายเหตุ
 

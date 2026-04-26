@@ -1,0 +1,80 @@
+using System.Text;
+using Microsoft.AspNetCore.Mvc;
+using Models.Dtos;
+using Services.Interfaces;
+
+namespace Controllers;
+
+[ApiController]
+[Route("api/admin")]
+public class AdminController : ControllerBase
+{
+    private readonly IOrderService _orderService;
+    private readonly IConfiguration _configuration;
+
+    public AdminController(IOrderService orderService, IConfiguration configuration)
+    {
+        _orderService = orderService;
+        _configuration = configuration;
+    }
+
+    // ── Basic Auth helper ──────────────────────────────────────────────────────
+    private bool IsAuthorized()
+    {
+        string? authHeader = Request.Headers["Authorization"].FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Basic "))
+            return false;
+
+        string base64Credentials = authHeader["Basic ".Length..].Trim();
+        string credentials = Encoding.UTF8.GetString(Convert.FromBase64String(base64Credentials));
+        string[] parts = credentials.Split(':', 2);
+        if (parts.Length != 2)
+            return false;
+
+        string username = _configuration["AdminAuth:Username"] ?? string.Empty;
+        string password = _configuration["AdminAuth:Password"] ?? string.Empty;
+
+        return parts[0] == username && parts[1] == password;
+    }
+
+    // GET /api/admin/orders?orderNumber=
+    [HttpGet("orders")]
+    public async Task<IActionResult> SearchOrders(
+        [FromQuery] string? orderNumber)
+    {
+        if (!IsAuthorized())
+            return Unauthorized(new { message = "Invalid credentials" });
+
+        try
+        {
+            List<AdminOrderResponseDto> result = await _orderService.SearchOrdersAsync(orderNumber);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // POST /api/admin/orders/approve
+    [HttpPost("orders/approve")]
+    public async Task<IActionResult> ApproveOrders([FromBody] ApproveOrdersDto dto)
+    {
+        if (!IsAuthorized())
+            return Unauthorized(new { message = "Invalid credentials" });
+
+        try
+        {
+            List<AdminOrderResponseDto> result = await _orderService.ApproveOrdersAsync(dto);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+}
