@@ -48,13 +48,13 @@
     - Quantity
 - **Status**: ✅ เสร็จแล้ว
 
-### 5. Confirm Order []
-- **Endpoint**: `POST /api/orders/{orderNumber}/confirm`
+### 5. Confirm Order [x]
+- **Endpoint**: `POST /api/orders/{id}/confirm`
 - **Authentication**: JWT Token (required)
 - **Description**: ยืนยันคำสั่งซื้อสินค้า
 - **Request Body**:
   - ที่อยู่จัดส่ง
-- **Status**: ⬜ ยังไม่เสร็จ
+- **Status**: ✅ เสร็จแล้ว
 
 ---
 
@@ -86,9 +86,9 @@
 
 | หมวด | เสร็จแล้ว | ทั้งหมด | สถานะ |
 |------|-----------|---------|-------|
-| User APIs | 4 | 5 | 80% |
+| User APIs | 5 | 5 | 100% |
 | Admin APIs | 0 | 2 | 0% |
-| **รวม** | **4** | **7** | **57%** |
+| **รวม** | **5** | **7** | **71%** |
 
 ## 📝 หมายเหตุ
 
