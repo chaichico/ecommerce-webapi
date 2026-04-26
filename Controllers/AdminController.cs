@@ -37,17 +37,19 @@ public class AdminController : ControllerBase
         return parts[0] == username && parts[1] == password;
     }
 
-    // GET /api/admin/orders?orderNumber=
+    // GET /api/admin/orders?orderNumber=&firstName=&lastName=
     [HttpGet("orders")]
     public async Task<IActionResult> SearchOrders(
-        [FromQuery] string? orderNumber)
+        [FromQuery] string? orderNumber,
+        [FromQuery] string? firstName,
+        [FromQuery] string? lastName)
     {
         if (!IsAuthorized())
             return Unauthorized(new { message = "Invalid credentials" });
 
         try
         {
-            List<AdminOrderResponseDto> result = await _orderService.SearchOrdersAsync(orderNumber);
+            List<AdminOrderResponseDto> result = await _orderService.SearchOrdersAsync(orderNumber, firstName, lastName);
             return Ok(result);
         }
         catch (Exception ex)
@@ -71,6 +73,10 @@ public class AdminController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {

@@ -53,7 +53,7 @@ public static class DbSeeder
                 ProductName = "Laptop Dell XPS 15",
                 Description = "High-performance laptop with 16GB RAM and 512GB SSD",
                 Price = 45000.00m,
-                Stock = 10,
+                Stock = 100,
                 IsActive = true
             },
             new Product
@@ -61,7 +61,7 @@ public static class DbSeeder
                 ProductName = "iPhone 15 Pro",
                 Description = "Latest iPhone with A17 Pro chip",
                 Price = 42900.00m,
-                Stock = 25,
+                Stock = 100,
                 IsActive = true
             },
             new Product
@@ -69,7 +69,7 @@ public static class DbSeeder
                 ProductName = "Samsung Galaxy S24",
                 Description = "Flagship Android phone with AI features",
                 Price = 32900.00m,
-                Stock = 15,
+                Stock = 100,
                 IsActive = true
             },
             new Product
@@ -77,7 +77,7 @@ public static class DbSeeder
                 ProductName = "Sony WH-1000XM5",
                 Description = "Premium noise-cancelling headphones",
                 Price = 13900.00m,
-                Stock = 30,
+                Stock = 100,
                 IsActive = true
             },
             new Product
@@ -85,7 +85,7 @@ public static class DbSeeder
                 ProductName = "iPad Air",
                 Description = "Powerful tablet with M1 chip",
                 Price = 24900.00m,
-                Stock = 20,
+                Stock = 100,
                 IsActive = true
             }
         };

@@ -84,7 +84,7 @@
 ### 2. User Registration (API Create User)
 - [x] สร้าง UsersController
 - [x] สร้าง RegisterUserDto
-- [x] Implement POST /api/users/register
+- [x] Implement POST /api/users/register (⚠️ return 200 OK แทน 201 Created ตาม spec)
 - [x] Validate Email (unique, format)
 - [x] Validate FirstName, LastName (required)
 - [x] Validate PhoneNumber (optional)
@@ -106,13 +106,13 @@
 - [x] เพิ่ม Admin credentials ใน appsettings.json (AdminAuth section)
 - [x] Implement GET /api/admin/orders
 - [x] Search by OrderNumber
-- [x] Search by User FirstName, LastName
+- [ ] Search by User FirstName, LastName (ยังไม่ implement — `SearchOrdersAsync` รับเฉพาะ `orderNumber`)
 - [x] Return Order List with Status (รอยืนยัน, ยืนยันแล้ว)
 - [x] Include Order Details in response (AdminOrderResponseDto)
 
 ### 5. User Create Order (API User Create Order)
 - [x] สร้าง CreateOrderDto + CreateOrderItemDto
-- [x] Implement POST /api/orders
+- [x] Implement POST /api/orders (⚠️ return 200 OK แทน 201 Created ตาม spec)
 - [x] เพิ่ม JWT Authentication ([Authorize] บน OrdersController)
 - [x] รองรับหลาย Products ในคำสั่งซื้อเดียว
 - [x] Validate Product Number & Quantity (ตรวจ product active + exists)
