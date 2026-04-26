@@ -5,4 +5,5 @@ public interface IOrderService
 {
     Task<OrderResponseDto> CreateOrderAsync(CreateOrderDto dto, string userEmail);
     Task<OrderResponseDto> UpdateOrderAsync(int id, UpdateOrderDto dtor, string userEmail);
+    Task<OrderResponseDto> ConfirmOrderAsync(int id, ConfirmOrderDto dto, string userEmail);
 }
