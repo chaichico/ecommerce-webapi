@@ -68,7 +68,7 @@ public class UserService : IUserService
     public async Task<LoginResponseDto> LoginAsync(LoginDto dto)
     {
         //  หา user จาก email
-        User user = await _userRepository.GetByEmailAsync(dto.Email);
+        User? user = await _userRepository.GetByEmailAsync(dto.Email);
         if (user == null)
         {
             throw new UnauthorizedAccessException("Invalid email or password");

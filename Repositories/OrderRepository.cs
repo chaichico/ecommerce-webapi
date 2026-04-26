@@ -35,4 +35,31 @@ public class OrderRepository : IOrderRepository
         await _context.SaveChangesAsync();
         return order;
     }
+
+    public async Task<List<Order>> SearchOrdersAsync(string? orderNumber)
+    {
+        IQueryable<Order> query = _context.Orders
+            .Include(o => o.Items)
+            .Include(o => o.User);
+
+        if (!string.IsNullOrWhiteSpace(orderNumber))
+            query = query.Where(o => o.OrderNumber.Contains(orderNumber));
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<List<Order>> GetByIdsAsync(List<int> ids)
+    {
+        return await _context.Orders
+            .Include(o => o.Items)
+            .Include(o => o.User)
+            .Where(o => ids.Contains(o.Id))
+            .ToListAsync();
+    }
+
+    public async Task UpdateRangeAsync(List<Order> orders)
+    {
+        _context.Orders.UpdateRange(orders);
+        await _context.SaveChangesAsync();
+    }
 }
