@@ -38,14 +38,15 @@
 - **Response**: OrderNumber
 - **Status**: ✅ เสร็จแล้ว
 
-### 4. Update Order []
-- **Endpoint**: `PUT /api/orders/{orderNumber}`
+### 4. Update Order [x]
+- **Endpoint**: `PUT /api/orders/{id}`
 - **Authentication**: JWT Token (required)
-- **Description**: แก้ไขคำสั่งซื้อสินค้า
+- **Description**: แก้ไขคำสั่งซื้อสินค้า (เฉพาะ Order ที่ยังเป็น Pending)
 - **Request Body**:
-  - Product Number
-  - จำนวน
-- **Status**: ⬜ ยังไม่เสร็จ
+  - Items (array):
+    - ProductId
+    - Quantity
+- **Status**: ✅ เสร็จแล้ว
 
 ### 5. Confirm Order []
 - **Endpoint**: `POST /api/orders/{orderNumber}/confirm`
@@ -85,9 +86,9 @@
 
 | หมวด | เสร็จแล้ว | ทั้งหมด | สถานะ |
 |------|-----------|---------|-------|
-| User APIs | 3 | 5 | 60% |
+| User APIs | 4 | 5 | 80% |
 | Admin APIs | 0 | 2 | 0% |
-| **รวม** | **3** | **7** | **43%** |
+| **รวม** | **4** | **7** | **57%** |
 
 ## 📝 หมายเหตุ
 
