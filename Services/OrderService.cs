@@ -175,6 +175,60 @@ public class OrderService : IOrderService
         };
 
     }
+
+    public async Task<OrderResponseDto> ConfirmOrderAsync(int id, ConfirmOrderDto dto, string userEmail)
+    {
+        // 1. หา user จาก email (ดึงมาจาก JWT claim)
+        User? user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == userEmail);
+        if (user == null)
+        {
+            throw new UnauthorizedAccessException("User not found");
+        }
+
+        // 2. หา order จาก id พร้อม Include Items
+        Order? order = await _orderRepository.GetByOrderIdAsync(id);
+        if (order == null)
+        {
+            throw new KeyNotFoundException("Order not found");
+        }
+
+        // 3. ตรวจสอบว่า order เป็นของ user คนนี้
+        if (order.UserId != user.Id)
+        {
+            throw new System.Security.SecurityException("You are not authorized to confirm this order");
+        }
+
+        // 4. ตรวจสอบว่า order ยัง Pending อยู่
+        if (order.Status != "Pending")
+        {
+            throw new InvalidOperationException("Only pending orders can be confirmed");
+        }
+
+        // 5. อัปเดต ShippingAddress และ Status
+        order.ShippingAddress = dto.ShippingAddress;
+        order.Status = "Confirmed";
+
+        // 6. บันทึกลง DB
+        await _orderRepository.UpdateAsync(order);
+
+        // 7. Return response
+        return new OrderResponseDto
+        {
+            OrderNumber = order.OrderNumber,
+            OrderDate = order.OrderDate,
+            Status = order.Status,
+            TotalPrice = order.TotalPrice,
+            Items = order.Items.Select(i => new OrderItemResponseDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                SubTotal = i.SubTotal
+            }).ToList()
+        };
+    }
 }
 
 // - `userEmail` มาจาก JWT claim — ไม่รับจาก request body

@@ -128,12 +128,12 @@
 - [ ] ตรวจสอบ Order ownership (User เป็นเจ้าของ Order)
 
 ### 7. User Confirm Order (API User Confirm Order)
-- [ ] สร้าง ConfirmOrderDTO
-- [ ] Implement POST /api/orders/{orderNumber}/confirm
-- [ ] เพิ่ม JWT Authentication
-- [ ] Validate OrderNumber
-- [ ] เพิ่ม ShippingAddress
-- [ ] Update Order Status
+- [x] สร้าง ConfirmOrderDTO
+- [x] Implement POST /api/orders/{orderNumber}/confirm
+- [x] เพิ่ม JWT Authentication
+- [x] Validate OrderNumber
+- [x] เพิ่ม ShippingAddress
+- [x] Update Order Status
 
 ### 8. Admin Approve Orders (API Admin Approve Order)
 - [ ] สร้าง ApproveOrdersDTO
@@ -151,7 +151,7 @@
 - [ ] สร้าง LoginDTO
 - [ ] สร้าง CreateOrderDTO
 - [ ] สร้าง UpdateOrderDTO
-- [ ] สร้าง ConfirmOrderDTO
+- [x] สร้าง ConfirmOrderDTO
 - [ ] สร้าง ApproveOrdersDTO
 - [ ] สร้าง Response DTOs
 
