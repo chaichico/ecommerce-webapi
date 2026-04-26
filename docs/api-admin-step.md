@@ -90,14 +90,14 @@ public interface IOrderRepository
     Task<Order> CreateAsync(Order order);
     Task<Order?> GetByOrderIdAsync(int id);
     Task<Order> UpdateAsync(Order order);
-    Task<List<Order>> SearchOrdersAsync(string? orderNumber);  // ← เพิ่ม
+    Task<List<Order>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName);  // ← เพิ่ม
     Task<List<Order>> GetByIdsAsync(List<int> ids);            // ← เพิ่ม
-    Task UpdateRangeAsync(List<Order> orders);                                                       // ← เพิ่ม
+    Task UpdateRangeAsync(List<Order> orders);                 // ← เพิ่ม
 }
 ```
 
 **จุดสำคัญ:**
-- `SearchOrdersAsync` — ค้นหาด้วย OrderNumber (parameter เป็น optional)
+- `SearchOrdersAsync` — ค้นหาด้วย `orderNumber`, `firstName`, `lastName` (ทุก parameter เป็น optional — ส่งมาตัวไหนก็ filter เฉพาะตัวนั้น)
 - `GetByIdsAsync` — ดึง orders หลายรายการพร้อมกันสำหรับ Approve ด้วย id (consistent กับ User API)
 - `UpdateRangeAsync` — บันทึก orders หลายรายการพร้อมกันใน batch เดียว
 
@@ -106,7 +106,7 @@ public interface IOrderRepository
 ### 5️⃣ **Repositories/OrderRepository.cs** — implement methods ใหม่
 
 ```csharp
-public async Task<List<Order>> SearchOrdersAsync(string? orderNumber)
+public async Task<List<Order>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName)
 {
     IQueryable<Order> query = _context.Orders
         .Include(o => o.Items)
@@ -114,6 +114,12 @@ public async Task<List<Order>> SearchOrdersAsync(string? orderNumber)
 
     if (!string.IsNullOrWhiteSpace(orderNumber))
         query = query.Where(o => o.OrderNumber.Contains(orderNumber));
+
+    if (!string.IsNullOrWhiteSpace(firstName))
+        query = query.Where(o => o.User.FirstName.Contains(firstName));
+
+    if (!string.IsNullOrWhiteSpace(lastName))
+        query = query.Where(o => o.User.LastName.Contains(lastName));
 
     return await query.ToListAsync();
 }
@@ -153,7 +159,7 @@ public interface IOrderService
     Task<OrderResponseDto> CreateOrderAsync(CreateOrderDto dto, string userEmail);
     Task<OrderResponseDto> UpdateOrderAsync(int id, UpdateOrderDto dto, string userEmail);
     Task<OrderResponseDto> ConfirmOrderAsync(int id, ConfirmOrderDto dto, string userEmail);
-    Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber);  // ← เพิ่ม
+    Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName);  // ← เพิ่ม
     Task<List<AdminOrderResponseDto>> ApproveOrdersAsync(ApproveOrdersDto dto);  // ← เพิ่ม
 }
 ```
@@ -163,9 +169,9 @@ public interface IOrderService
 ### 7️⃣ **Services/OrderService.cs** — implement methods ใหม่
 
 ```csharp
-public async Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber)
+public async Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName)
 {
-    List<Order> orders = await _orderRepository.SearchOrdersAsync(orderNumber);
+    List<Order> orders = await _orderRepository.SearchOrdersAsync(orderNumber, firstName, lastName);
 
     return orders.Select(o => new AdminOrderResponseDto
     {
@@ -292,17 +298,19 @@ public class AdminController : ControllerBase
         return parts[0] == username && parts[1] == password;
     }
 
-    // GET /api/admin/orders?orderNumber=
+    // GET /api/admin/orders?orderNumber=&firstName=&lastName=
     [HttpGet("orders")]
     public async Task<IActionResult> SearchOrders(
-        [FromQuery] string? orderNumber)
+        [FromQuery] string? orderNumber,
+        [FromQuery] string? firstName,
+        [FromQuery] string? lastName)
     {
         if (!IsAuthorized())
             return Unauthorized(new { message = "Invalid credentials" });
 
         try
         {
-            List<AdminOrderResponseDto> result = await _orderService.SearchOrdersAsync(orderNumber);
+            List<AdminOrderResponseDto> result = await _orderService.SearchOrdersAsync(orderNumber, firstName, lastName);
             return Ok(result);
         }
         catch (Exception ex)

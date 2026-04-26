@@ -230,9 +230,9 @@ public class OrderService : IOrderService
         };
     }
 
-    public async Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber)
+    public async Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName)
     {
-        List<Order> orders = await _orderRepository.SearchOrdersAsync(orderNumber);
+        List<Order> orders = await _orderRepository.SearchOrdersAsync(orderNumber, firstName, lastName);
 
         return orders.Select(o => new AdminOrderResponseDto
         {

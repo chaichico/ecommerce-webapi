@@ -36,7 +36,7 @@ public class OrderRepository : IOrderRepository
         return order;
     }
 
-    public async Task<List<Order>> SearchOrdersAsync(string? orderNumber)
+    public async Task<List<Order>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName)
     {
         IQueryable<Order> query = _context.Orders
             .Include(o => o.Items)
@@ -44,6 +44,12 @@ public class OrderRepository : IOrderRepository
 
         if (!string.IsNullOrWhiteSpace(orderNumber))
             query = query.Where(o => o.OrderNumber.Contains(orderNumber));
+
+        if (!string.IsNullOrWhiteSpace(firstName))
+            query = query.Where(o => o.User.FirstName.Contains(firstName));
+
+        if (!string.IsNullOrWhiteSpace(lastName))
+            query = query.Where(o => o.User.LastName.Contains(lastName));
 
         return await query.ToListAsync();
     }
