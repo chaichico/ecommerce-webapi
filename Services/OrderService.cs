@@ -205,14 +205,39 @@ public class OrderService : IOrderService
             throw new InvalidOperationException("Only pending orders can be confirmed");
         }
 
-        // 5. อัปเดต ShippingAddress และ Status
+        // 5. ดึง products ที่เกี่ยวข้องกับ order items
+        List<int> productIds = order.Items.Select(i => i.ProductId).Distinct().ToList();
+        List<Product> products = await _context.Products
+            .Where(p => productIds.Contains(p.Id))
+            .ToListAsync();
+
+        // 6. ตรวจสอบ stock ว่าเพียงพอก่อน confirm
+        foreach (OrderItem item in order.Items)
+        {
+            Product? product = products.FirstOrDefault(p => p.Id == item.ProductId);
+            if (product == null || product.Stock < item.Quantity)
+            {
+                int available = product?.Stock ?? 0;
+                throw new InvalidOperationException(
+                    $"Insufficient stock for '{item.ProductName}': required {item.Quantity}, available {available}");
+            }
+        }
+
+        // 7. หัก stock
+        foreach (OrderItem item in order.Items)
+        {
+            Product product = products.First(p => p.Id == item.ProductId);
+            product.Stock -= item.Quantity;
+        }
+
+        // 8. อัปเดต ShippingAddress และ Status
         order.ShippingAddress = dto.ShippingAddress;
         order.Status = "Confirmed";
 
-        // 6. บันทึกลง DB
+        // 9. บันทึกลง DB
         await _orderRepository.UpdateAsync(order);
 
-        // 7. Return response
+        // 10. Return response
         return new OrderResponseDto
         {
             OrderNumber = order.OrderNumber,
@@ -280,47 +305,15 @@ public class OrderService : IOrderService
         }
 
         // 4. เก็บเฉพาะ orders ที่ยัง Confirmed
-        List<Order> pendingOrders = orders.Where(o => o.Status == "Confirmed").ToList();
+        List<Order> confirmedOrders = orders.Where(o => o.Status == "Confirmed").ToList();
 
-        // 5. ดึง products ทั้งหมดที่เกี่ยวข้องกับ confirmed orders
-        List<int> productIds = pendingOrders
-            .SelectMany(o => o.Items)
-            .Select(i => i.ProductId)
-            .Distinct()
-            .ToList();
-
-        List<Product> products = await _context.Products
-            .Where(p => productIds.Contains(p.Id))
-            .ToListAsync();
-
-        // 6. ตรวจสอบ stock ว่าเพียงพอสำหรับทุก order ก่อน approve
-        foreach (Order order in pendingOrders)
+        // 5. เปลี่ยน Status เป็น Approved (stock ถูกหักแล้วตอน Confirm)
+        foreach (Order order in confirmedOrders)
         {
-            foreach (OrderItem item in order.Items)
-            {
-                Product? product = products.FirstOrDefault(p => p.Id == item.ProductId);
-                if (product == null || product.Stock < item.Quantity)
-                {
-                    string productName = item.ProductName;
-                    int available = product?.Stock ?? 0;
-                    throw new InvalidOperationException(
-                        $"Insufficient stock for '{productName}': required {item.Quantity}, available {available}");
-                }
-            }
-        }
-
-        // 7. หัก stock และเปลี่ยน Status เป็น Approved
-        foreach (Order order in pendingOrders)
-        {
-            foreach (OrderItem item in order.Items)
-            {
-                Product product = products.First(p => p.Id == item.ProductId);
-                product.Stock -= item.Quantity;
-            }
             order.Status = "Approved";
         }
 
-        // 8. บันทึกทั้งหมดใน batch เดียว (orders + product stock)
+        // 6. บันทึก
         await _orderRepository.UpdateRangeAsync(orders);
 
         // 9. Return response
