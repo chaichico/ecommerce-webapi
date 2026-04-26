@@ -271,19 +271,59 @@ public class OrderService : IOrderService
             throw new KeyNotFoundException($"Orders not found: {string.Join(", ", notFound)}");
         }
 
-        // 3. เปลี่ยน Status เป็น Confirmed เฉพาะที่ยัง Pending อยู่
-        foreach (Order order in orders)
+        // 3. ตรวจสอบว่ามี orders ที่ยัง Pending อยู่ (ยังไม่ได้ Confirm โดย user)
+        List<int> pendingIds = orders.Where(o => o.Status == "Pending").Select(o => o.Id).ToList();
+        if (pendingIds.Count > 0)
         {
-            if (order.Status == "Pending")
+            throw new InvalidOperationException(
+                $"Orders must be confirmed by user before approval. Pending order IDs: {string.Join(", ", pendingIds)}");
+        }
+
+        // 4. เก็บเฉพาะ orders ที่ยัง Confirmed
+        List<Order> pendingOrders = orders.Where(o => o.Status == "Confirmed").ToList();
+
+        // 5. ดึง products ทั้งหมดที่เกี่ยวข้องกับ confirmed orders
+        List<int> productIds = pendingOrders
+            .SelectMany(o => o.Items)
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+
+        List<Product> products = await _context.Products
+            .Where(p => productIds.Contains(p.Id))
+            .ToListAsync();
+
+        // 6. ตรวจสอบ stock ว่าเพียงพอสำหรับทุก order ก่อน approve
+        foreach (Order order in pendingOrders)
+        {
+            foreach (OrderItem item in order.Items)
             {
-                order.Status = "Confirmed";
+                Product? product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                if (product == null || product.Stock < item.Quantity)
+                {
+                    string productName = item.ProductName;
+                    int available = product?.Stock ?? 0;
+                    throw new InvalidOperationException(
+                        $"Insufficient stock for '{productName}': required {item.Quantity}, available {available}");
+                }
             }
         }
 
-        // 4. บันทึกทั้งหมดใน batch เดียว
+        // 7. หัก stock และเปลี่ยน Status เป็น Approved
+        foreach (Order order in pendingOrders)
+        {
+            foreach (OrderItem item in order.Items)
+            {
+                Product product = products.First(p => p.Id == item.ProductId);
+                product.Stock -= item.Quantity;
+            }
+            order.Status = "Approved";
+        }
+
+        // 8. บันทึกทั้งหมดใน batch เดียว (orders + product stock)
         await _orderRepository.UpdateRangeAsync(orders);
 
-        // 5. Return response
+        // 9. Return response
         return orders.Select(o => new AdminOrderResponseDto
         {
             OrderNumber = o.OrderNumber,
