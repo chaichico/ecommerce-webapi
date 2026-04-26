@@ -89,6 +89,21 @@ builder.Services.AddSwaggerGen(options =>
             new List<string>()
         }
     });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Basic"
+                }
+            },
+            new List<string>()
+        }
+    });
 });
 
 builder.Services.AddAuthorization();
