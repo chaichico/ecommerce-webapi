@@ -49,6 +49,7 @@ dotnet ef database update
 dotnet run
 
 
+## Test
 
 # สร้าง migration ใหม่
 dotnet ef migrations add Init
