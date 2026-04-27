@@ -42,6 +42,8 @@ ecommerce/
 docker compose up -d sqlserver
 docker logs sqlserver
   รอจนเห็น: SQL Server is now ready for client connections
+# update database (apply migration)
+dotnet ef database update
 
 ## Run API
 dotnet run
@@ -50,9 +52,6 @@ dotnet run
 
 # สร้าง migration ใหม่
 dotnet ef migrations add Init
-
-# update database (apply migration)
-dotnet ef database update
 
 # ลบ migration ล่าสุด
 dotnet ef migrations remove

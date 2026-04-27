@@ -51,10 +51,10 @@
 ## 🌟 Optional Requirements (คะแนนพิเศษ)
 
 ### 1. Automated Testing Support
-- [ ] สร้างโครงสร้าง Test Project
-- [ ] กำหนดค่า InMemory Database สำหรับ Testing
-- [ ] เพิ่มตัวแปร ENV RunMode = test
-- [ ] เขียน Unit Tests
+- [x] สร้างโครงสร้าง Test Project (Ecommerce.Tests, xUnit, reference ecommerce.csproj)
+- [x] กำหนดค่า InMemory Database สำหรับ Testing
+- [x] เพิ่มตัวแปร ENV RunMode = test (appsettings.Test.json)
+- [x] เขียน Unit Tests (UserRepository, OrderRepository, UserService, OrderService — 23 tests passed)
 - [ ] เขียน Integration Tests
 
 ### 2. Code First & Database Migration
