@@ -3,7 +3,7 @@
 ## Tech Stack
 - .NET 10 Web API
 - Entity Framework Core (Code First)
-- PostgreSQL (configurable via `appsettings.json`)
+- SQL Server (configurable via `appsettings.json`)
 - JWT Bearer Authentication
 
 ## Architecture

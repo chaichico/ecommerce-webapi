@@ -23,10 +23,10 @@
   - `Controllers/UsersController.cs` — Login: `var result`  
   - `Data/DbSeeder.cs` — `var users`, `var products` ทั่วทั้งไฟล์
 
-- [ ] **I6 — `OrderService` ใช้ SQL Server แทน PostgreSQL**  
-  เปลี่ยน `options.UseSqlServer(...)` → `options.UseNpgsql(...)`  
-  เพิ่ม NuGet package `Npgsql.EntityFrameworkCore.PostgreSQL`  
-  อัปเดต connection string ใน `appsettings.json` ให้ตรงกับ PostgreSQL  
+- [x] **I6 — Database provider ใช้ SQL Server ให้สอดคล้องทั้งระบบ**  
+  ยืนยัน `options.UseSqlServer(...)` ใน `Program.cs`  
+  ยืนยัน NuGet package `Microsoft.EntityFrameworkCore.SqlServer` ใน `ecommerce.csproj`  
+  ยืนยัน connection string ใน `appsettings.json` ให้ตรงกับ SQL Server  
   **ไฟล์:** `Program.cs`, `appsettings.json`
 
 ---
@@ -50,5 +50,5 @@
 
 | หมวด | รวม | เสร็จ |
 |---|---|---|
-| 🟡 Important (code) | 6 | 5 |
+| 🟡 Important (code) | 6 | 6 |
 | 🟡 Important (tests) | 2 | 0 |
