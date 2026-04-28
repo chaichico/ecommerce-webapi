@@ -1,7 +1,6 @@
-using Data;
-using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.Dtos;
+using Models.Enums;
 using Repositories.Interfaces;
 using Services.Interfaces;
 
@@ -9,31 +8,29 @@ namespace Services;
 public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
-    private readonly AppDbContext _context;
+    private readonly IUserRepository _userRepository;
+    private readonly IProductRepository _productRepository;
 
     // constructor
-    public OrderService(IOrderRepository orderRepository, AppDbContext context)
+    public OrderService(
+        IOrderRepository orderRepository,
+        IUserRepository userRepository,
+        IProductRepository productRepository)
     {
         _orderRepository = orderRepository;
-        _context = context;
+        _userRepository = userRepository;
+        _productRepository = productRepository;
     }
 
     // Create order function
     public async Task<OrderResponseDto> CreateOrderAsync(CreateOrderDto dto, string userEmail)
     {
         // 1. ดึง user จาก email  จาก JWT claim
-        User? user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == userEmail);
-        if (user == null)
-        {
-            throw new UnauthorizedAccessException("User not found");
-        }
+        User user = await GetUserByEmailOrThrowAsync(userEmail);
 
         // 2. ตรวจและดึง product ทุกตัวจาก DB
         List<int> productIds = dto.Items.Select(i => i.ProductId).ToList();
-        List<Product> products = await _context.Products
-            .Where(p => productIds.Contains(p.Id) && p.IsActive)
-            .ToListAsync();
+        List<Product> products = await _productRepository.GetActiveByIdsAsync(productIds);
 
         if (products.Count != productIds.Count)
         {
@@ -64,7 +61,7 @@ public class OrderService : IOrderService
         {
             OrderNumber = orderNumber,
             OrderDate = DateTime.UtcNow,
-            Status = "Pending",
+            Status = OrderStatus.Pending,
             ShippingAddress = string.Empty,
             UserId = user.Id,
             Items = orderItems,
@@ -95,12 +92,7 @@ public class OrderService : IOrderService
     public async Task<OrderResponseDto> UpdateOrderAsync(int id, UpdateOrderDto dto, string userEmail)
     {
         // 1 find User from email
-        User? user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == userEmail);
-        if (user == null)
-        {
-            throw new UnauthorizedAccessException("User not found");
-        }
+        User user = await GetUserByEmailOrThrowAsync(userEmail);
 
         // 2 find User from Id and Include Items
         Order? order = await _orderRepository.GetByOrderIdAsync(id);
@@ -115,16 +107,14 @@ public class OrderService : IOrderService
             throw new System.Security.SecurityException("You are not authorized to update this order");
         }
         // 4 check if order is still Pending
-        if (order.Status != "Pending")
+        if (order.Status != OrderStatus.Pending)
         {
             throw new InvalidOperationException("Only pending orders can be updated");
         }
 
         // 5 check and pull every Products from Database
         List<int> productIds = dto.Items.Select(i => i.ProductId).ToList();
-        List<Product> products = await _context.Products
-            .Where(p => productIds.Contains(p.Id) && p.IsActive)
-            .ToListAsync();
+        List<Product> products = await _productRepository.GetActiveByIdsAsync(productIds);
 
         if (products.Count != productIds.Count)
         {
@@ -132,7 +122,7 @@ public class OrderService : IOrderService
         }
 
         // 6 delete old items and replace with new one
-        _context.Set<OrderItem>().RemoveRange(order.Items);
+        await _orderRepository.RemoveItemsAsync(order.Items);
 
         List<OrderItem> newItems = dto.Items.Select(item =>
         {
@@ -179,12 +169,7 @@ public class OrderService : IOrderService
     public async Task<OrderResponseDto> ConfirmOrderAsync(int id, ConfirmOrderDto dto, string userEmail)
     {
         // 1. หา user จาก email (ดึงมาจาก JWT claim)
-        User? user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == userEmail);
-        if (user == null)
-        {
-            throw new UnauthorizedAccessException("User not found");
-        }
+        User user = await GetUserByEmailOrThrowAsync(userEmail);
 
         // 2. หา order จาก id พร้อม Include Items
         Order? order = await _orderRepository.GetByOrderIdAsync(id);
@@ -200,16 +185,14 @@ public class OrderService : IOrderService
         }
 
         // 4. ตรวจสอบว่า order ยัง Pending อยู่
-        if (order.Status != "Pending")
+        if (order.Status != OrderStatus.Pending)
         {
             throw new InvalidOperationException("Only pending orders can be confirmed");
         }
 
         // 5. ดึง products ที่เกี่ยวข้องกับ order items
         List<int> productIds = order.Items.Select(i => i.ProductId).Distinct().ToList();
-        List<Product> products = await _context.Products
-            .Where(p => productIds.Contains(p.Id))
-            .ToListAsync();
+        List<Product> products = await _productRepository.GetByIdsAsync(productIds);
 
         // 6. ตรวจสอบ stock ว่าเพียงพอก่อน confirm
         foreach (OrderItem item in order.Items)
@@ -232,7 +215,7 @@ public class OrderService : IOrderService
 
         // 8. อัปเดต ShippingAddress และ Status
         order.ShippingAddress = dto.ShippingAddress;
-        order.Status = "Confirmed";
+        order.Status = OrderStatus.Confirmed;
 
         // 9. บันทึกลง DB
         await _orderRepository.UpdateAsync(order);
@@ -297,7 +280,7 @@ public class OrderService : IOrderService
         }
 
         // 3. ตรวจสอบว่ามี orders ที่ยัง Pending อยู่ (ยังไม่ได้ Confirm โดย user)
-        List<int> pendingIds = orders.Where(o => o.Status == "Pending").Select(o => o.Id).ToList();
+        List<int> pendingIds = orders.Where(o => o.Status == OrderStatus.Pending).Select(o => o.Id).ToList();
         if (pendingIds.Count > 0)
         {
             throw new InvalidOperationException(
@@ -305,19 +288,19 @@ public class OrderService : IOrderService
         }
 
         // 4. เก็บเฉพาะ orders ที่ยัง Confirmed
-        List<Order> confirmedOrders = orders.Where(o => o.Status == "Confirmed").ToList();
+        List<Order> confirmedOrders = orders.Where(o => o.Status == OrderStatus.Confirmed).ToList();
 
         // 5. เปลี่ยน Status เป็น Approved (stock ถูกหักแล้วตอน Confirm)
         foreach (Order order in confirmedOrders)
         {
-            order.Status = "Approved";
+            order.Status = OrderStatus.Approved;
         }
 
-        // 6. บันทึก
-        await _orderRepository.UpdateRangeAsync(orders);
+        // 6. บันทึกเฉพาะ orders ที่มีการเปลี่ยนแปลง
+        await _orderRepository.UpdateRangeAsync(confirmedOrders);
 
-        // 9. Return response
-        return orders.Select(o => new AdminOrderResponseDto
+        // 7. เตรียม response
+        List<AdminOrderResponseDto> response = orders.Select(o => new AdminOrderResponseDto
         {
             OrderNumber = o.OrderNumber,
             OrderDate = o.OrderDate,
@@ -339,11 +322,19 @@ public class OrderService : IOrderService
                 SubTotal = i.SubTotal
             }).ToList()
         }).ToList();
+
+        // 8. Return response
+        return response;
+    }
+
+    private async Task<User> GetUserByEmailOrThrowAsync(string email)
+    {
+        User? user = await _userRepository.GetByEmailAsync(email);
+        if (user == null)
+        {
+            throw new UnauthorizedAccessException("User not found");
+        }
+
+        return user;
     }
 }
-
-// - `userEmail` มาจาก JWT claim — ไม่รับจาก request body
-// - ตรวจสอบว่า product มีอยู่จริงและ `IsActive = true` ก่อนสร้าง order
-// - `UnitPrice` ดึงจาก product จริงใน DB (ป้องกัน user ส่งราคาเองมา)
-// - `ShippingAddress` เป็น empty ก่อน — จะกรอกตอน Confirm Order
-// - `OrderNumber` สร้างแบบ unique ด้วย format `ORD-{date}-{guid}`

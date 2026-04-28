@@ -40,16 +40,16 @@ ecommerce/
 
 ## Run Database
 docker compose up -d sqlserver
-docker logs sqlserver
-  รอจนเห็น: SQL Server is now ready for client connections
+
 # update database (apply migration)
 dotnet ef database update
+
+## Test
+dotnet test
 
 ## Run API
 dotnet run
 
-
-## Test
 
 # สร้าง migration ใหม่
 dotnet ef migrations add Init

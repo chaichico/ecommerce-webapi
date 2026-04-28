@@ -2,6 +2,7 @@ namespace Models;
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Models.Enums;
 
 public class Order
 {
@@ -14,7 +15,7 @@ public class Order
     public DateTime OrderDate {get; set;} = DateTime.UtcNow;
 
     [Required]
-    public string Status {get; set;} = "Pending";
+    public OrderStatus Status {get; set;} = OrderStatus.Pending;
 
     [Required]
     public string ShippingAddress {get; set;} = string.Empty;

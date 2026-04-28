@@ -98,13 +98,13 @@ public class UserService : IUserService
     private string GenerateJwtToken(User user)
     {
         // อ่านค่า config จาก appsettings.json
-        var jwtKey = _configuration["Jwt:Key"] ?? throw new Exception("JWT Key not configured");
-        var jwtIssuer = _configuration["Jwt:Issuer"] ?? throw new Exception("JWT Issuer not configured");
-        var jwtAudience = _configuration["Jwt:Audience"] ?? throw new Exception("JWT Audience not configured");
-        var jwtExpiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "60");
+        string jwtKey = _configuration["Jwt:Key"] ?? throw new Exception("JWT Key not configured");
+        string jwtIssuer = _configuration["Jwt:Issuer"] ?? throw new Exception("JWT Issuer not configured");
+        string jwtAudience = _configuration["Jwt:Audience"] ?? throw new Exception("JWT Audience not configured");
+        int jwtExpiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "60");
         
         // สร้าง claims (ข้อมูลที่จะเก็บใน token)
-        var claims = new[]
+        Claim[] claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Email),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
@@ -114,11 +114,11 @@ public class UserService : IUserService
         };
         
         // สร้าง signing key
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+        SigningCredentials credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         
         // สร้าง token
-        var token = new JwtSecurityToken(
+        JwtSecurityToken token = new JwtSecurityToken(
             issuer: jwtIssuer,
             audience: jwtAudience,
             claims: claims,

@@ -6,16 +6,13 @@ using System.Text;
 public class EncryptionService : IEncryptionService
 {
     private readonly byte[] _key;
-    private readonly byte[] _iv;
 
     public EncryptionService(IConfiguration configuration)
     {
         // อ่าน key จาก appsettings หรือ ENV
-        string keyString = configuration["Encryption:Key"] ?? "YourSecretKey1234567890123456"; // 32 chars
-        string ivString = configuration["Encryption:IV"] ?? "YourIV1234567890"; // 16 chars
+        string keyString = configuration["Encryption:Key"] ?? throw new InvalidOperationException("Encryption:Key is not configured");
         
         _key = Encoding.UTF8.GetBytes(keyString);
-        _iv = Encoding.UTF8.GetBytes(ivString);
     }
 
     public string Encrypt(string plainText)
@@ -24,7 +21,7 @@ public class EncryptionService : IEncryptionService
         
         using Aes aes = Aes.Create();
         aes.Key = _key;
-        aes.IV = _iv;
+        aes.GenerateIV();
         
         ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
         using MemoryStream ms = new MemoryStream();
@@ -33,20 +30,36 @@ public class EncryptionService : IEncryptionService
         {
             sw.Write(plainText);
         }
+
+        byte[] cipherBytes = ms.ToArray();
+        byte[] result = new byte[aes.IV.Length + cipherBytes.Length];
+        Buffer.BlockCopy(aes.IV, 0, result, 0, aes.IV.Length);
+        Buffer.BlockCopy(cipherBytes, 0, result, aes.IV.Length, cipherBytes.Length);
         
-        return Convert.ToBase64String(ms.ToArray());
+        return Convert.ToBase64String(result);
     }
     
     public string Decrypt(string encryptedText)
     {
         if (string.IsNullOrEmpty(encryptedText)) return encryptedText;
+
+        byte[] fullCipher = Convert.FromBase64String(encryptedText);
+        if (fullCipher.Length <= 16)
+        {
+            throw new CryptographicException("Invalid encrypted payload.");
+        }
+
+        byte[] iv = new byte[16];
+        byte[] cipherBytes = new byte[fullCipher.Length - iv.Length];
+        Buffer.BlockCopy(fullCipher, 0, iv, 0, iv.Length);
+        Buffer.BlockCopy(fullCipher, iv.Length, cipherBytes, 0, cipherBytes.Length);
         
         using Aes aes = Aes.Create();
         aes.Key = _key;
-        aes.IV = _iv;
+        aes.IV = iv;
         
         ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-        using MemoryStream ms = new MemoryStream(Convert.FromBase64String(encryptedText));
+        using MemoryStream ms = new MemoryStream(cipherBytes);
         using CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
         using StreamReader sr = new StreamReader(cs);
         

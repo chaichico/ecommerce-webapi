@@ -34,7 +34,7 @@ public class OrdersController : ControllerBase
         try
         {
             OrderResponseDto result = await _orderService.CreateOrderAsync(dto, userEmail);
-            return Ok(result);
+            return CreatedAtAction(null, result);
         }
         catch (UnauthorizedAccessException ex)
         {

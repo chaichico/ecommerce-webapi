@@ -1,4 +1,5 @@
 using System.Text;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using Models.Dtos;
 using Services.Interfaces;
@@ -34,7 +35,16 @@ public class AdminController : ControllerBase
         string username = _configuration["AdminAuth:Username"] ?? string.Empty;
         string password = _configuration["AdminAuth:Password"] ?? string.Empty;
 
-        return parts[0] == username && parts[1] == password;
+        bool isUsernameValid = FixedTimeStringEquals(parts[0], username);
+        bool isPasswordValid = FixedTimeStringEquals(parts[1], password);
+        return isUsernameValid && isPasswordValid;
+    }
+
+    private static bool FixedTimeStringEquals(string left, string right)
+    {
+        byte[] leftHash = SHA256.HashData(Encoding.UTF8.GetBytes(left));
+        byte[] rightHash = SHA256.HashData(Encoding.UTF8.GetBytes(right));
+        return CryptographicOperations.FixedTimeEquals(leftHash, rightHash);
     }
 
     // GET /api/admin/orders?orderNumber=&firstName=&lastName=
