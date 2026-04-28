@@ -16,8 +16,15 @@ var builder = WebApplication.CreateBuilder(args);
 // DbContext - Use environment variable for server or fallback to config
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString)
-);
+    options.UseSqlServer(
+        connectionString,
+        sqlServerOptions =>
+        {
+            sqlServerOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        }));
 
 
 // Controller

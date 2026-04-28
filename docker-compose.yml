@@ -21,7 +21,8 @@ services:
       - JWT_EXPIRY_MINUTES=60
       - ENCRYPTION_KEY=YourEncryptionKey32CharactersLong!
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -33,6 +34,12 @@ services:
       - "1433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$SA_PASSWORD -Q \"SELECT 1\" -C || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
 volumes:
   sqlserver_data:
