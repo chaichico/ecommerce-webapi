@@ -1,0 +1,6 @@
+Ecommerce.Tests
+bin
+obj
+.git
+.vs
+*.db

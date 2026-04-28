@@ -3,12 +3,12 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
 # copy csproj แล้ว restore ก่อน (optimize layer)
-COPY *.csproj ./
-RUN dotnet restore
+COPY ecommerce.csproj ./
+RUN dotnet restore ecommerce.csproj
 
 # copy ทั้งโปรเจกต์
 COPY . ./
-RUN dotnet publish -c Release -o out
+RUN dotnet publish ecommerce.csproj -c Release -o out
 
 # 🔹 Stage 2: Runtime (เบากว่า)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
