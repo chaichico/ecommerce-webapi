@@ -119,7 +119,7 @@ public static class DbSeeder
             {
                 OrderNumber = "ORD-2026-003",
                 OrderDate = DateTime.UtcNow.AddDays(-1),
-                Status = "Pending",
+                Status = OrderStatus.Pending,
                 ShippingAddress = "789 ถนนเพชรบุรี กรุงเทพฯ 10400",
                 UserId = users[2].Id,
                 TotalPrice = 37800.00m

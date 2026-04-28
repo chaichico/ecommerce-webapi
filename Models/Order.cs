@@ -14,7 +14,7 @@ public class Order
     public DateTime OrderDate {get; set;} = DateTime.UtcNow;
 
     [Required]
-    public string Status {get; set;} = "Pending";
+    public string Status {get; set;} = OrderStatus.Pending;
 
     [Required]
     public string ShippingAddress {get; set;} = string.Empty;
