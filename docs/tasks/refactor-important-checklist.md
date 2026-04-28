@@ -1,24 +1,24 @@
 ## 🟡 Important — ควรแก้ (6 รายการ)
 
-- [ ] **I1 — `OrderService` bypass Repository Layer**  
+- [x] **I1 — `OrderService` bypass Repository Layer**  
   สร้าง `IProductRepository` พร้อม method `GetActiveByIdsAsync`  
   เพิ่ม `RemoveItemsAsync` ใน `IOrderRepository`  
   ลบ `AppDbContext` dependency ออกจาก `OrderService` ให้ inject แค่ repository interfaces  
   **ไฟล์:** `Services/OrderService.cs`, `Repositories/`, `Services/Interfaces/`
 
-- [ ] **I2 — `POST /api/orders` คืนค่า `200 OK` แทน `201 Created`**  
+- [x] **I2 — `POST /api/orders` คืนค่า `200 OK` แทน `201 Created`**  
   เปลี่ยน `return Ok(result)` → `return CreatedAtAction(null, result)`  
   **ไฟล์:** `Controllers/OrderController.cs`, บรรทัด 40
 
-- [ ] **I3 — `POST /api/users/register` คืนค่า `200 OK` แทน `201 Created`**  
+- [x] **I3 — `POST /api/users/register` คืนค่า `200 OK` แทน `201 Created`**  
   เปลี่ยน `return Ok(result)` → `return CreatedAtAction(null, result)`  
   **ไฟล์:** `Controllers/UsersController.cs`, บรรทัด 24
 
-- [ ] **I4 — Typo `meassage` ใน Login error response**  
+- [x] **I4 — Typo `meassage` ใน Login error response**  
   เปลี่ยน `new {meassage = ex.Message}` → `new { message = ex.Message }`  
   **ไฟล์:** `Controllers/UsersController.cs`, บรรทัด 42
 
-- [ ] **I5 — ใช้ `var` ในหลายไฟล์ (ละเมิด code style)**  
+- [x] **I5 — ใช้ `var` ในหลายไฟล์ (ละเมิด code style)**  
   - `Services/UserService.cs` — `GenerateJwtToken`: `var jwtKey`, `var claims`, `var key`, `var credentials`, `var token`  
   - `Controllers/UsersController.cs` — Login: `var result`  
   - `Data/DbSeeder.cs` — `var users`, `var products` ทั่วทั้งไฟล์
@@ -50,5 +50,5 @@
 
 | หมวด | รวม | เสร็จ |
 |---|---|---|
-| 🟡 Important (code) | 6 | 0 |
+| 🟡 Important (code) | 6 | 5 |
 | 🟡 Important (tests) | 2 | 0 |

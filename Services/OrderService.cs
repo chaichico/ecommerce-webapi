@@ -1,5 +1,3 @@
-using Data;
-using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.Dtos;
 using Repositories.Interfaces;
@@ -9,21 +7,25 @@ namespace Services;
 public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
-    private readonly AppDbContext _context;
+    private readonly IUserRepository _userRepository;
+    private readonly IProductRepository _productRepository;
 
     // constructor
-    public OrderService(IOrderRepository orderRepository, AppDbContext context)
+    public OrderService(
+        IOrderRepository orderRepository,
+        IUserRepository userRepository,
+        IProductRepository productRepository)
     {
         _orderRepository = orderRepository;
-        _context = context;
+        _userRepository = userRepository;
+        _productRepository = productRepository;
     }
 
     // Create order function
     public async Task<OrderResponseDto> CreateOrderAsync(CreateOrderDto dto, string userEmail)
     {
         // 1. ดึง user จาก email  จาก JWT claim
-        User? user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == userEmail);
+        User? user = await _userRepository.GetByEmailAsync(userEmail);
         if (user == null)
         {
             throw new UnauthorizedAccessException("User not found");
@@ -31,9 +33,7 @@ public class OrderService : IOrderService
 
         // 2. ตรวจและดึง product ทุกตัวจาก DB
         List<int> productIds = dto.Items.Select(i => i.ProductId).ToList();
-        List<Product> products = await _context.Products
-            .Where(p => productIds.Contains(p.Id) && p.IsActive)
-            .ToListAsync();
+        List<Product> products = await _productRepository.GetActiveByIdsAsync(productIds);
 
         if (products.Count != productIds.Count)
         {
@@ -95,8 +95,7 @@ public class OrderService : IOrderService
     public async Task<OrderResponseDto> UpdateOrderAsync(int id, UpdateOrderDto dto, string userEmail)
     {
         // 1 find User from email
-        User? user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == userEmail);
+        User? user = await _userRepository.GetByEmailAsync(userEmail);
         if (user == null)
         {
             throw new UnauthorizedAccessException("User not found");
@@ -122,9 +121,7 @@ public class OrderService : IOrderService
 
         // 5 check and pull every Products from Database
         List<int> productIds = dto.Items.Select(i => i.ProductId).ToList();
-        List<Product> products = await _context.Products
-            .Where(p => productIds.Contains(p.Id) && p.IsActive)
-            .ToListAsync();
+        List<Product> products = await _productRepository.GetActiveByIdsAsync(productIds);
 
         if (products.Count != productIds.Count)
         {
@@ -132,7 +129,7 @@ public class OrderService : IOrderService
         }
 
         // 6 delete old items and replace with new one
-        _context.Set<OrderItem>().RemoveRange(order.Items);
+        await _orderRepository.RemoveItemsAsync(order.Items);
 
         List<OrderItem> newItems = dto.Items.Select(item =>
         {
@@ -179,8 +176,7 @@ public class OrderService : IOrderService
     public async Task<OrderResponseDto> ConfirmOrderAsync(int id, ConfirmOrderDto dto, string userEmail)
     {
         // 1. หา user จาก email (ดึงมาจาก JWT claim)
-        User? user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == userEmail);
+        User? user = await _userRepository.GetByEmailAsync(userEmail);
         if (user == null)
         {
             throw new UnauthorizedAccessException("User not found");
@@ -207,9 +203,7 @@ public class OrderService : IOrderService
 
         // 5. ดึง products ที่เกี่ยวข้องกับ order items
         List<int> productIds = order.Items.Select(i => i.ProductId).Distinct().ToList();
-        List<Product> products = await _context.Products
-            .Where(p => productIds.Contains(p.Id))
-            .ToListAsync();
+        List<Product> products = await _productRepository.GetByIdsAsync(productIds);
 
         // 6. ตรวจสอบ stock ว่าเพียงพอก่อน confirm
         foreach (OrderItem item in order.Items)

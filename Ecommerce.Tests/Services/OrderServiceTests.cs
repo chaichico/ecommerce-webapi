@@ -12,7 +12,9 @@ public class OrderServiceTests
     private static OrderService BuildService(AppDbContext context)
     {
         OrderRepository orderRepository = new OrderRepository(context);
-        return new OrderService(orderRepository, context);
+        UserRepository userRepository = new UserRepository(context);
+        ProductRepository productRepository = new ProductRepository(context);
+        return new OrderService(orderRepository, userRepository, productRepository);
     }
 
     [Fact]

@@ -23,7 +23,7 @@ public class UsersController : ControllerBase
         try
         {
             UserResponseDto result = await _userService.RegisterAsync(dto);
-            return Ok(result);
+            return CreatedAtAction(null, result);
         }
         catch (Exception ex)
         {
@@ -36,16 +36,16 @@ public class UsersController : ControllerBase
     {
         try
         {
-            var result = await _userService.LoginAsync(dto);
+            LoginResponseDto result = await _userService.LoginAsync(dto);
             return Ok(result);  // Login success
         }
         catch (UnauthorizedAccessException ex)  
         {
-            return Unauthorized(new {message = ex.Message});    // Login failed
+            return Unauthorized(new { message = ex.Message });    // Login failed
         }
         catch (Exception ex)
         {
-            return BadRequest(new {meassage = ex.Message});
+            return BadRequest(new { message = ex.Message });
         }
     }
 }

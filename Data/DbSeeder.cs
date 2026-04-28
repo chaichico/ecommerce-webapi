@@ -15,7 +15,7 @@ public static class DbSeeder
         }
 
         // Seed Users
-        var users = new List<User>
+        List<User> users = new List<User>
         {
             new User
             {
@@ -47,7 +47,7 @@ public static class DbSeeder
         await context.SaveChangesAsync();
 
         // Seed Products
-        var products = new List<Product>
+        List<Product> products = new List<Product>
         {
             new Product
             {
@@ -95,7 +95,7 @@ public static class DbSeeder
         await context.SaveChangesAsync();
 
         // Seed Orders
-        var orders = new List<Order>
+        List<Order> orders = new List<Order>
         {
             new Order
             {
@@ -130,7 +130,7 @@ public static class DbSeeder
         await context.SaveChangesAsync();
 
         // Seed OrderItems
-        var orderItems = new List<OrderItem>
+        List<OrderItem> orderItems = new List<OrderItem>
         {
             // Order 1 items
             new OrderItem

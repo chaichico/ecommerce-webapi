@@ -36,6 +36,12 @@ public class OrderRepository : IOrderRepository
         return order;
     }
 
+    public async Task RemoveItemsAsync(List<OrderItem> items)
+    {
+        _context.Set<OrderItem>().RemoveRange(items);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<List<Order>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName)
     {
         IQueryable<Order> query = _context.Orders
