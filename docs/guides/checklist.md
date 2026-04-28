@@ -16,6 +16,8 @@
 
 ### 3. Environment Variables & Configuration
 - [x] สร้างไฟล์ .gitignore
+- [x] ใช้ `appsettings.json` สำหรับ configuration (AdminAuth, Jwt, Encryption, ConnectionStrings)
+  - ⚠️ `appsettings.json` มี section `AdminCredentials` ที่ซ้ำซ้อนกับ `AdminAuth` (ใช้เฉพาะ `AdminAuth`)
 - [ ] สร้างไฟล์ .env.example พร้อม template (ไม่มี — ใช้ appsettings.json แทน)
 - [x] กำหนดค่า Connection String แบบ dynamic จาก appsettings.json / ENV
 - [x] เพิ่มตัวแปร Admin credentials ใน appsettings.json (AdminAuth section)
@@ -55,6 +57,7 @@
 - [x] กำหนดค่า InMemory Database สำหรับ Testing
 - [x] เพิ่มตัวแปร ENV RunMode = test (appsettings.Test.json)
 - [x] เขียน Unit Tests (UserRepository, OrderRepository, UserService, OrderService — 23 tests passed)
+- [x] InMemory Database ใช้ได้จริงผ่าน `TestDbContextFactory` (ใช้ `UseInMemoryDatabase` + `Guid.NewGuid()` ต่อ test)
 - [ ] เขียน Integration Tests
 
 ### 2. Code First & Database Migration
@@ -84,7 +87,7 @@
 ### 2. User Registration (API Create User)
 - [x] สร้าง UsersController
 - [x] สร้าง RegisterUserDto
-- [x] Implement POST /api/users/register (⚠️ return 200 OK แทน 201 Created ตาม spec)
+- [x] Implement POST /api/users/register (⚠️ return `200 OK` แทน `201 Created` ตาม spec — ยังไม่ได้แก้)
 - [x] Validate Email (unique, format)
 - [x] Validate FirstName, LastName (required)
 - [x] Validate PhoneNumber (optional)
@@ -106,13 +109,13 @@
 - [x] เพิ่ม Admin credentials ใน appsettings.json (AdminAuth section)
 - [x] Implement GET /api/admin/orders
 - [x] Search by OrderNumber
-- [ ] Search by User FirstName, LastName (ยังไม่ implement — `SearchOrdersAsync` รับเฉพาะ `orderNumber`)
-- [x] Return Order List with Status (รอยืนยัน, ยืนยันแล้ว)
+- [x] Search by User FirstName, LastName (`SearchOrdersAsync` filter ด้วย `firstName` และ `lastName` ใน OrderRepository + OrderService)
+- [x] Return Order List with Status (Pending / Confirmed / Approved)
 - [x] Include Order Details in response (AdminOrderResponseDto)
 
 ### 5. User Create Order (API User Create Order)
 - [x] สร้าง CreateOrderDto + CreateOrderItemDto
-- [x] Implement POST /api/orders (⚠️ return 200 OK แทน 201 Created ตาม spec)
+- [x] Implement POST /api/orders (⚠️ return `200 OK` แทน `201 Created` ตาม spec — ยังไม่ได้แก้)
 - [x] เพิ่ม JWT Authentication ([Authorize] บน OrdersController)
 - [x] รองรับหลาย Products ในคำสั่งซื้อเดียว
 - [x] Validate Product Number & Quantity (ตรวจ product active + exists)
@@ -140,7 +143,8 @@
 - [x] Implement POST /api/admin/orders/approve
 - [x] เพิ่ม Basic Authentication
 - [x] รองรับการ approve หลาย Orders พร้อมกัน
-- [x] Update Status เป็น "ยืนยันคำสั่งซื้อ"
+- [x] Update Status เป็น `Approved` (flow: Pending → Confirmed โดย User → Approved โดย Admin)
+  - ⚠️ Admin Approve จะทำงานได้เฉพาะ Orders ที่ User Confirm แล้วเท่านั้น (Status = "Confirmed")
 
 ---
 
@@ -206,29 +210,35 @@
 
 ## 🎯 Progress Summary
 
-**เสร็จแล้ว:**
-- ✅ Database Models (User, Product, Order, OrderItem)
-- ✅ DbContext และ Relationships
-- ✅ Database Migration (Initial)
-- ✅ Dockerfile (Multi-stage, optimized)
-- ✅ Docker Compose (Port 8080, SQL Server)
-- ✅ Swagger/OpenAPI Setup
-- ✅ .gitignore
-- ✅ Seed Data Function (DbSeeder)
+**เสร็จแล้ว (ทุก Business Requirement ครบ):**
+- ✅ .NET 10 Web API + Entity Framework Core + SQL Server
+- ✅ Code First + Database Migration (2 migrations)
+- ✅ Dockerfile (Multi-stage, aspnet:10.0-alpine image)
+- ✅ Docker Compose (Port 8080, SQL Server service, volumes)
+- ✅ Swagger/OpenAPI (Bearer + Basic Auth support)
+- ✅ .gitignore + appsettings.json configuration
+- ✅ Seed Data (Products + Users — auto on empty collection)
+- ✅ User Registration (Email unique, PhoneNumber encrypted, Password hashed)
+- ✅ User Login (JWT token with Email/FirstName/LastName in payload)
+- ✅ Admin Search Orders (Basic Auth, filter by OrderNumber/FirstName/LastName)
+- ✅ Admin Approve Orders (Basic Auth, bulk approve, Confirmed → Approved)
+- ✅ User Create Order (JWT Auth, multi-product, OrderNumber generated)
+- ✅ User Update Order (JWT Auth, ownership check, Pending only)
+- ✅ User Confirm Order (JWT Auth, ShippingAddress, stock deduction, Pending → Confirmed)
+- ✅ Unit Tests (UserRepository, OrderRepository, UserService, OrderService — InMemory DB)
+- ✅ DTOs, Services, Repositories with Interfaces
 
-**กำลังดำเนินการ:**
-- 🔄 Controllers (มีเพียง UsersController แบบ basic)
+**ปัญหาที่พบ (minor):**
+- ⚠️ `POST /api/users/register` และ `POST /api/orders` ควร return `201 Created` แต่ return `200 OK`
+- ⚠️ `UsersController.Login` ใช้ `var result` แทน explicit type `LoginResponseDto result` (ขัด code style guidelines)
+- ⚠️ `appsettings.json` มี section `AdminCredentials` ซ้ำซ้อน (ไม่ได้ใช้งาน — ใช้ `AdminAuth` เท่านั้น)
+- ⚠️ Order status ใช้ English string ("Pending", "Confirmed", "Approved") แทน Thai string ตาม spec
 
-**ยังไม่ได้ทำ:**
-- ❌ DTOs
-- ❌ Services Layer
-- ❌ Repositories Layer
-- ❌ JWT Authentication
-- ❌ Basic Authentication
-- ❌ All Business Logic APIs
-- ❌ Encryption (Phone, Password)
-- ❌ .env.example configuration
-- ❌ Testing Infrastructure
+**ยังไม่ได้ทำ (optional/non-critical):**
+- ❌ Integration Tests
+- ❌ Docker Build/Compose ทดสอบจริง
+- ❌ Error Handling Middleware
+- ❌ XML Comments สำหรับ Swagger
 
 ---
 

@@ -138,8 +138,8 @@ else
 
 ## ลำดับการทำ
 
-1. [ ] Step 1 — สร้าง Entity Configurations ใน `Data/Configurations/`
-2. [ ] Step 2 — แก้ไข `AppDbContext.OnModelCreating`
-3. [ ] Step 3 — สร้าง `TestDataSeeder.cs`
-4. [ ] Step 4 — เขียน Unit Tests (Repository และ Service)
+1. [x] Step 1 — สร้าง Entity Configurations ใน `Data/Configurations/`
+2. [x] Step 2 — แก้ไข `AppDbContext.OnModelCreating`
+3. [x] Step 3 — สร้าง `TestDataSeeder.cs`
+4. [x] Step 4 — เขียน Unit Tests (Repository และ Service)
 5. [ ] Step 5 — (Optional) Integration Tests ด้วย WebApplicationFactory
