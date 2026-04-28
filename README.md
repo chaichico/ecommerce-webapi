@@ -80,6 +80,13 @@ dotnet run
 http://localhost:8080/swagger
 
 
+
+### หาก run โดยใช้คำสั่ง
+docker compose up -d --build
+หาก container api ไม่ run ให้รอ sqlserver พร้อม
+จากนั้นให้ run container api ใหม่
+
+
 <!-- If no migration file or incase you need to-->
 # สร้าง migration ใหม่
 dotnet ef migrations add Init
