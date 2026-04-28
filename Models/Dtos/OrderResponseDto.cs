@@ -1,11 +1,14 @@
 namespace Models.Dtos;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using Models.Enums;
 
 public class OrderResponseDto
 {
     public string OrderNumber {get; set;} = string.Empty;
     public DateTime OrderDate {get; set;}
-    public string Status {get; set;} = string.Empty;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public OrderStatus Status {get; set;}
     public decimal TotalPrice {get; set;}
     public List<OrderItemResponseDto> Items {get; set;} = new();
 }

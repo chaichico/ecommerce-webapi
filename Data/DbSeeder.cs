@@ -1,7 +1,7 @@
 using Models;
 using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
-
+using Models.Enums;
 namespace Data;
 
 public static class DbSeeder
@@ -101,7 +101,7 @@ public static class DbSeeder
             {
                 OrderNumber = "ORD-2026-001",
                 OrderDate = DateTime.UtcNow.AddDays(-5),
-                Status = "Completed",
+                Status = OrderStatus.Confirmed,
                 ShippingAddress = "123 ถนนสุขุมวิท กรุงเทพฯ 10110",
                 UserId = users[0].Id,
                 TotalPrice = 58900.00m
@@ -110,7 +110,7 @@ public static class DbSeeder
             {
                 OrderNumber = "ORD-2026-002",
                 OrderDate = DateTime.UtcNow.AddDays(-3),
-                Status = "Shipping",
+                Status = OrderStatus.Approved,
                 ShippingAddress = "456 ถนนพระราม 4 กรุงเทพฯ 10330",
                 UserId = users[1].Id,
                 TotalPrice = 45000.00m

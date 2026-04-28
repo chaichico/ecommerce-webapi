@@ -1,5 +1,6 @@
 using Models;
 using Models.Dtos;
+using Models.Enums;
 using Repositories.Interfaces;
 using Services.Interfaces;
 

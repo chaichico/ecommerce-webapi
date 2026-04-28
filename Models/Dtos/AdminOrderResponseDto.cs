@@ -1,10 +1,13 @@
 namespace Models.Dtos;
+using System.Text.Json.Serialization;
+using Models.Enums;
 
 public class AdminOrderResponseDto
 {
     public string OrderNumber { get; set; } = string.Empty;
     public DateTime OrderDate { get; set; }
-    public string Status { get; set; } = string.Empty;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public OrderStatus Status { get; set; }
     public decimal TotalPrice { get; set; }
     public string ShippingAddress { get; set; } = string.Empty;
     public AdminUserInfoDto User { get; set; } = null!;
