@@ -2,6 +2,7 @@ using Data;
 using Ecommerce.Tests.Helpers;
 using Models;
 using Models.Dtos;
+using Models.Enums;
 using Repositories;
 using Services;
 
@@ -37,7 +38,7 @@ public class OrderServiceTests
         OrderResponseDto result = await service.CreateOrderAsync(dto, "orderuser@example.com");
 
         Assert.NotEmpty(result.OrderNumber);
-        Assert.Equal("Pending", result.Status);
+        Assert.Equal(OrderStatus.Pending, result.Status);
         Assert.Equal(100.00m, result.TotalPrice);
         Assert.Single(result.Items);
     }
@@ -124,7 +125,7 @@ public class OrderServiceTests
         ConfirmOrderDto dto = new ConfirmOrderDto { ShippingAddress = "123 Test Street" };
         OrderResponseDto result = await service.ConfirmOrderAsync(order.Id, dto, "confirm@example.com");
 
-        Assert.Equal("Confirmed", result.Status);
+        Assert.Equal(OrderStatus.Confirmed, result.Status);
 
         Product? updatedProduct = await context.Products.FindAsync(product.Id);
         Assert.NotNull(updatedProduct);

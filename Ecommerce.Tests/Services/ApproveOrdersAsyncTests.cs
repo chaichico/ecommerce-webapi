@@ -2,6 +2,7 @@ using Data;
 using Ecommerce.Tests.Helpers;
 using Models;
 using Models.Dtos;
+using Models.Enums;
 using Repositories;
 using Services;
 
@@ -25,7 +26,7 @@ public class ApproveOrdersAsyncTests
         Product product = await TestDataSeeder.CreateProductAsync(context, "Approve Product", 20m);
         Order order = await TestDataSeeder.CreateOrderWithItemsAsync(context, user.Id, product, 2);
 
-        order.Status = "Confirmed";
+        order.Status = OrderStatus.Confirmed;
         await context.SaveChangesAsync();
 
         OrderService service = BuildService(context);
@@ -38,11 +39,11 @@ public class ApproveOrdersAsyncTests
         List<AdminOrderResponseDto> result = await service.ApproveOrdersAsync(dto);
 
         Assert.Single(result);
-        Assert.Equal("Approved", result[0].Status);
+        Assert.Equal(OrderStatus.Approved, result[0].Status);
 
         Order? updatedOrder = await context.Orders.FindAsync(order.Id);
         Assert.NotNull(updatedOrder);
-        Assert.Equal("Approved", updatedOrder.Status);
+        Assert.Equal(OrderStatus.Approved, updatedOrder.Status);
     }
 
     [Fact]

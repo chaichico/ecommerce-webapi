@@ -1,5 +1,6 @@
 using Data;
 using Models;
+using Models.Enums;
 
 namespace Ecommerce.Tests.Helpers;
 
@@ -35,7 +36,7 @@ public static class TestDataSeeder
         return product;
     }
 
-    public static async Task<Order> CreateOrderAsync(AppDbContext context, int userId, string status = "Pending")
+    public static async Task<Order> CreateOrderAsync(AppDbContext context, int userId, OrderStatus status = OrderStatus.Pending)
     {
         Order order = new Order
         {
@@ -65,7 +66,7 @@ public static class TestDataSeeder
         {
             OrderNumber = $"ORD-TEST-{Guid.NewGuid().ToString()[..8].ToUpper()}",
             OrderDate = DateTime.UtcNow,
-            Status = "Pending",
+            Status = OrderStatus.Pending,
             ShippingAddress = string.Empty,
             UserId = userId,
             Items = new List<OrderItem> { item },
