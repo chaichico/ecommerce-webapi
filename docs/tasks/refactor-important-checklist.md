@@ -33,12 +33,12 @@
 
 ## 🟡 Important — Tests (2 รายการ)
 
-- [ ] **T1 — Tests ไม่ Dispose context เมื่อ test ล้มเหลว**  
+- [x] **T1 — Tests ไม่ Dispose context เมื่อ test ล้มเหลว**  
   เปลี่ยนทุก `AppDbContext context = ...` + `context.Dispose()` ท้ายสุด  
   → `await using AppDbContext context = TestDbContextFactory.CreateFresh()`  
   **ไฟล์:** ไฟล์ test ทั้งหมดใน `Ecommerce.Tests/`
 
-- [ ] **T2 — ไม่มี Tests สำหรับ `ApproveOrdersAsync`**  
+- [x] **T2 — ไม่มี Tests สำหรับ `ApproveOrdersAsync`**  
   เพิ่ม test file ใน `Ecommerce.Tests/Services/`  
   - `ApproveOrdersAsync_WithConfirmedOrders_ChangesStatusToApproved`  
   - `ApproveOrdersAsync_WithPendingOrders_ThrowsInvalidOperationException`  
@@ -51,4 +51,4 @@
 | หมวด | รวม | เสร็จ |
 |---|---|---|
 | 🟡 Important (code) | 6 | 6 |
-| 🟡 Important (tests) | 2 | 0 |
+| 🟡 Important (tests) | 2 | 2 |

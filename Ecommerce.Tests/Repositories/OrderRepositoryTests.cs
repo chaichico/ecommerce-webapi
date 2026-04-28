@@ -10,7 +10,7 @@ public class OrderRepositoryTests
     [Fact]
     public async Task CreateAsync_ShouldPersistOrderWithItems()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
         Product product = await TestDataSeeder.CreateProductAsync(context);
 
@@ -39,13 +39,12 @@ public class OrderRepositoryTests
         Assert.True(created.Id > 0);
         Assert.Equal("ORD-TEST-001", created.OrderNumber);
         Assert.Single(created.Items);
-        context.Dispose();
     }
 
     [Fact]
     public async Task GetByOrderIdAsync_WhenOrderExists_ReturnsOrderWithItems()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
         Product product = await TestDataSeeder.CreateProductAsync(context);
         Order created = await TestDataSeeder.CreateOrderWithItemsAsync(context, user.Id, product);
@@ -57,25 +56,23 @@ public class OrderRepositoryTests
         Assert.Equal(created.Id, result.Id);
         Assert.NotEmpty(result.Items);
         Assert.NotNull(result.User);
-        context.Dispose();
     }
 
     [Fact]
     public async Task GetByOrderIdAsync_WhenOrderNotExists_ReturnsNull()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
 
         OrderRepository repository = new OrderRepository(context);
         Order? result = await repository.GetByOrderIdAsync(999);
 
         Assert.Null(result);
-        context.Dispose();
     }
 
     [Fact]
     public async Task SearchOrdersAsync_ByOrderNumber_ReturnsMatchingOrders()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
 
         Order order = new Order
@@ -94,13 +91,12 @@ public class OrderRepositoryTests
 
         Assert.Single(results);
         Assert.Equal("ORD-SEARCH-ABC", results[0].OrderNumber);
-        context.Dispose();
     }
 
     [Fact]
     public async Task UpdateAsync_ShouldPersistChanges()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
         Order order = await TestDataSeeder.CreateOrderAsync(context, user.Id);
 
@@ -112,13 +108,12 @@ public class OrderRepositoryTests
         Order updated = await repository.UpdateAsync(toUpdate);
 
         Assert.Equal("Confirmed", updated.Status);
-        context.Dispose();
     }
 
     [Fact]
     public async Task GetByIdsAsync_ReturnsOrdersMatchingIds()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
         Order order1 = await TestDataSeeder.CreateOrderAsync(context, user.Id);
         Order order2 = await TestDataSeeder.CreateOrderAsync(context, user.Id);
@@ -127,6 +122,5 @@ public class OrderRepositoryTests
         List<Order> results = await repository.GetByIdsAsync(new List<int> { order1.Id, order2.Id });
 
         Assert.Equal(2, results.Count);
-        context.Dispose();
     }
 }

@@ -20,7 +20,7 @@ public class OrderServiceTests
     [Fact]
     public async Task CreateOrderAsync_WithValidData_ReturnsOrderResponseDto()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context, "orderuser@example.com");
         Product product = await TestDataSeeder.CreateProductAsync(context, "Widget", 50.00m);
 
@@ -40,13 +40,12 @@ public class OrderServiceTests
         Assert.Equal("Pending", result.Status);
         Assert.Equal(100.00m, result.TotalPrice);
         Assert.Single(result.Items);
-        context.Dispose();
     }
 
     [Fact]
     public async Task CreateOrderAsync_WithInactiveProduct_ThrowsException()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         await TestDataSeeder.CreateUserAsync(context, "orderuser2@example.com");
         Product inactive = await TestDataSeeder.CreateProductAsync(context, "Inactive", 10m, isActive: false);
 
@@ -61,13 +60,12 @@ public class OrderServiceTests
         };
 
         await Assert.ThrowsAsync<Exception>(() => service.CreateOrderAsync(dto, "orderuser2@example.com"));
-        context.Dispose();
     }
 
     [Fact]
     public async Task UpdateOrderAsync_WithValidData_UpdatesOrderItems()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context, "updateuser@example.com");
         Product product = await TestDataSeeder.CreateProductAsync(context, "Widget", 50.00m);
         Order order = await TestDataSeeder.CreateOrderWithItemsAsync(context, user.Id, product, 1);
@@ -86,13 +84,12 @@ public class OrderServiceTests
 
         Assert.Equal(250.00m, result.TotalPrice);
         Assert.Equal(5, result.Items[0].Quantity);
-        context.Dispose();
     }
 
     [Fact]
     public async Task UpdateOrderAsync_WhenNotOwner_ThrowsSecurityException()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User owner = await TestDataSeeder.CreateUserAsync(context, "owner@example.com");
         User other = await TestDataSeeder.CreateUserAsync(context, "other@example.com");
         Product product = await TestDataSeeder.CreateProductAsync(context);
@@ -110,13 +107,12 @@ public class OrderServiceTests
 
         await Assert.ThrowsAsync<System.Security.SecurityException>(
             () => service.UpdateOrderAsync(order.Id, dto, "other@example.com"));
-        context.Dispose();
     }
 
     [Fact]
     public async Task ConfirmOrderAsync_WithSufficientStock_UpdatesStatusAndDeductsStock()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context, "confirm@example.com");
         Product product = await TestDataSeeder.CreateProductAsync(context, "Widget", 100m);
         product.Stock = 10;
@@ -133,13 +129,12 @@ public class OrderServiceTests
         Product? updatedProduct = await context.Products.FindAsync(product.Id);
         Assert.NotNull(updatedProduct);
         Assert.Equal(7, updatedProduct.Stock);
-        context.Dispose();
     }
 
     [Fact]
     public async Task ConfirmOrderAsync_WithInsufficientStock_ThrowsInvalidOperationException()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context, "stockfail@example.com");
         Product product = await TestDataSeeder.CreateProductAsync(context, "Widget", 100m);
         product.Stock = 1;
@@ -151,6 +146,5 @@ public class OrderServiceTests
         ConfirmOrderDto dto = new ConfirmOrderDto { ShippingAddress = "123 Test Street" };
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.ConfirmOrderAsync(order.Id, dto, "stockfail@example.com"));
-        context.Dispose();
     }
 }

@@ -28,7 +28,7 @@ public class UserServiceTests
     [Fact]
     public async Task RegisterAsync_WithValidData_ReturnsUserResponseDto()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         UserRepository userRepository = new UserRepository(context);
         FakePasswordHasher passwordHasher = new FakePasswordHasher();
         FakeEncryptionService encryptionService = new FakeEncryptionService();
@@ -51,13 +51,12 @@ public class UserServiceTests
         Assert.Equal("register@example.com", result.Email);
         Assert.Equal("John", result.FirstName);
         Assert.Equal("Doe", result.LastName);
-        context.Dispose();
     }
 
     [Fact]
     public async Task RegisterAsync_WithDuplicateEmail_ThrowsException()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         await TestDataSeeder.CreateUserAsync(context, "duplicate@example.com");
 
         UserRepository userRepository = new UserRepository(context);
@@ -77,13 +76,12 @@ public class UserServiceTests
         };
 
         await Assert.ThrowsAsync<Exception>(() => service.RegisterAsync(dto));
-        context.Dispose();
     }
 
     [Fact]
     public async Task LoginAsync_WithValidCredentials_ReturnsTokenAndUser()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         FakePasswordHasher passwordHasher = new FakePasswordHasher();
 
         User user = new User
@@ -107,13 +105,12 @@ public class UserServiceTests
 
         Assert.NotEmpty(result.Token);
         Assert.Equal("login@example.com", result.User.Email);
-        context.Dispose();
     }
 
     [Fact]
     public async Task LoginAsync_WithWrongPassword_ThrowsUnauthorizedAccessException()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         FakePasswordHasher passwordHasher = new FakePasswordHasher();
 
         User user = new User
@@ -134,13 +131,12 @@ public class UserServiceTests
 
         LoginDto dto = new LoginDto { Email = "login2@example.com", Password = "wrong" };
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.LoginAsync(dto));
-        context.Dispose();
     }
 
     [Fact]
     public async Task LoginAsync_WithNonExistentEmail_ThrowsUnauthorizedAccessException()
     {
-        AppDbContext context = TestDbContextFactory.CreateFresh();
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
         UserRepository userRepository = new UserRepository(context);
         FakePasswordHasher passwordHasher = new FakePasswordHasher();
         FakeEncryptionService encryptionService = new FakeEncryptionService();
@@ -150,6 +146,5 @@ public class UserServiceTests
 
         LoginDto dto = new LoginDto { Email = "ghost@example.com", Password = "pass" };
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.LoginAsync(dto));
-        context.Dispose();
     }
 }
