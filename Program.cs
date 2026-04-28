@@ -113,9 +113,10 @@ var app = builder.Build();
 // Seed Database
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<AppDbContext>();
-    await DbSeeder.SeedAsync(context);
+    IServiceProvider services = scope.ServiceProvider;
+    AppDbContext context = services.GetRequiredService<AppDbContext>();
+    IPasswordHasher passwordHasher = services.GetRequiredService<IPasswordHasher>();
+    await DbSeeder.SeedAsync(context, passwordHasher);
 }
 
 app.UseSwagger();

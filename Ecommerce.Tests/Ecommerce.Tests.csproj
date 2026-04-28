@@ -20,9 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ecommerce.csproj">
-      <Properties>UseAppHost=false</Properties>
-    </ProjectReference>
+    <ProjectReference Include="..\Ecommerce.csproj"/>
   </ItemGroup>
 
 </Project>

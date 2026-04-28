@@ -1,11 +1,12 @@
 using Models;
 using Microsoft.EntityFrameworkCore;
+using Services.Interfaces;
 
 namespace Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AppDbContext context)
+    public static async Task SeedAsync(AppDbContext context, IPasswordHasher passwordHasher)
     {
         // ตรวจสอบว่ามีข้อมูลอยู่แล้วหรือไม่
         if (await context.Users.AnyAsync() || await context.Products.AnyAsync())
@@ -21,7 +22,7 @@ public static class DbSeeder
                 Email = "john.doe@example.com",
                 FirstName = "John",
                 LastName = "Doe",
-                PasswordHash = "hashed_password_1",
+                PasswordHash = passwordHasher.HashPassword("Password123!"),
                 PhoneNumber = "081-234-5678"
             },
             new User
@@ -29,7 +30,7 @@ public static class DbSeeder
                 Email = "jane.smith@example.com",
                 FirstName = "Jane",
                 LastName = "Smith",
-                PasswordHash = "hashed_password_2",
+                PasswordHash = passwordHasher.HashPassword("Password123!"),
                 PhoneNumber = "082-345-6789"
             },
             new User
@@ -37,7 +38,7 @@ public static class DbSeeder
                 Email = "somchai.thai@example.com",
                 FirstName = "สมชาย",
                 LastName = "ใจดี",
-                PasswordHash = "hashed_password_3",
+                PasswordHash = passwordHasher.HashPassword("Password123!"),
                 PhoneNumber = "083-456-7890"
             }
         };
