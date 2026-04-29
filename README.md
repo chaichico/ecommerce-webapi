@@ -2,6 +2,8 @@
 
 ```
 ecommerce/
+├── .github/
+│   └── copilot-instructions.md
 ├── Controllers/
 │   ├── AdminController.cs
 │   ├── OrdersController.cs
@@ -14,6 +16,21 @@ ecommerce/
 │       ├── OrderItemConfiguration.cs
 │       ├── ProductConfiguration.cs
 │       └── UserConfiguration.cs
+├── docs/
+│   ├── architecture/
+│   │   └── spec.md
+│   ├── guides/
+│   │   ├── api-checklist.md
+│   │   ├── checklist.md
+│   │   ├── db_setup.md
+│   │   └── last-refactor-checklist.md
+│   ├── tasks/
+│   │   └── ...
+│   ├── code-review-1-thai.md
+│   ├── code-review-1.md
+│   ├── code-review-2.md
+│   ├── last-review.md
+│   └── review-restfulAPI.md
 ├── Models/
 │   ├── Dtos/
 │   │   ├── AdminOrderResponseDto.cs
@@ -51,23 +68,38 @@ ecommerce/
 │   ├── OrderService.cs
 │   ├── PasswordHasher.cs
 │   └── UserService.cs
-├── Migrations/
-├── docs/
 ├── Ecommerce.Tests/
+│   ├── Fakes/
+│   ├── Helpers/
+│   ├── Repositories/
+│   ├── Services/
+│   ├── UnitTest1.cs
+│   └── Ecommerce.Tests.csproj
+├── Migrations/
+│   ├── 20260417090318_InitialCreate.cs
+│   ├── 20260423060405_FixOrderItemProductId.cs
+│   ├── 20260428041451_SyncLatestModel.cs
+│   ├── 20260428082235_ConvertOrderStatusToEnum.cs
+│   └── AppDbContextModelSnapshot.cs
+├── Properties/
+│   └── launchSettings.json
 ├── Program.cs
+├── ecommerce.http
 ├── appsettings.json
 ├── appsettings.Development.json
 ├── appsettings.Test.json
+├── build_output.txt
 ├── ecommerce.csproj
 ├── ecommerce.sln
+├── fix-docker-delay.md
 ├── docker-compose.yml
 └── Dockerfile
 ```
-
+# RUN WEB API แบบ LOCAL 
 ## 1 Run Database
 docker compose up -d sqlserver
 
-# 2 update database (apply migration)
+## 2 update database (apply migration)
 dotnet ef database update
 
 ## 3 Test
@@ -81,18 +113,17 @@ http://localhost:8080/swagger
 
 
 
-### หาก run โดยใช้คำสั่ง
+# RUN WEB API แบบ Container
 docker compose up -d --build
-หาก container api ไม่ run ให้รอ sqlserver พร้อม
-จากนั้นให้ run container api ใหม่
+
 
 
 <!-- If no migration file or incase you need to-->
-# สร้าง migration ใหม่
+## สร้าง migration ใหม่
 dotnet ef migrations add Init
 
-# ลบ migration ล่าสุด
+## ลบ migration ล่าสุด
 dotnet ef migrations remove
 
-# ดู migration ทั้งหมด
+## ดู migration ทั้งหมด
 dotnet ef migrations list
