@@ -18,6 +18,33 @@ public class OrdersController : ControllerBase
         _orderService = orderService;
     }
 
+    // GET /api/orders/{id}
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        string? userEmail = User.FindFirst(ClaimTypes.Email)?.Value
+                            ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userEmail))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
+        try
+        {
+            OrderResponseDto result = await _orderService.GetOrderByIdAsync(id, userEmail);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (System.Security.SecurityException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+    }
+
     // POST /api/orders
     [HttpPost]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
@@ -34,7 +61,7 @@ public class OrdersController : ControllerBase
         try
         {
             OrderResponseDto result = await _orderService.CreateOrderAsync(dto, userEmail);
-            return CreatedAtAction(nameof(CreateOrder), result);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
         catch (UnauthorizedAccessException ex)
         {

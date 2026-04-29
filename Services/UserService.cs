@@ -29,7 +29,7 @@ public class UserService : IUserService
         // เช็คว่า email ซ้ำไหม
         if (await _userRepository.EmailExistsAsync(dto.Email))
         {
-            throw new Exception("Email already exists");
+            throw new InvalidOperationException("Email already exists");
         }
 
         // เรียก Hash password
@@ -98,9 +98,9 @@ public class UserService : IUserService
     private string GenerateJwtToken(User user)
     {
         // อ่านค่า config จาก appsettings.json
-        string jwtKey = _configuration["Jwt:Key"] ?? throw new Exception("JWT Key not configured");
-        string jwtIssuer = _configuration["Jwt:Issuer"] ?? throw new Exception("JWT Issuer not configured");
-        string jwtAudience = _configuration["Jwt:Audience"] ?? throw new Exception("JWT Audience not configured");
+        string jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+        string jwtIssuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured");
+        string jwtAudience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience not configured");
         int jwtExpiryMinutes = int.Parse(_configuration["Jwt:ExpiryInMinutes"] ?? "60");
         
         // สร้าง claims (ข้อมูลที่จะเก็บใน token)

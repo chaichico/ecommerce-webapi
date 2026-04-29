@@ -131,7 +131,8 @@ using (var scope = app.Services.CreateScope())
     IServiceProvider services = scope.ServiceProvider;
     AppDbContext context = services.GetRequiredService<AppDbContext>();
     IPasswordHasher passwordHasher = services.GetRequiredService<IPasswordHasher>();
-    await DbSeeder.SeedAsync(context, passwordHasher);
+    IEncryptionService encryptionService = services.GetRequiredService<IEncryptionService>();
+    await DbSeeder.SeedAsync(context, passwordHasher, encryptionService);
 }
 
 app.UseSwagger();

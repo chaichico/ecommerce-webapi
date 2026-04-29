@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using Data;
 using Models;
 using Models.Enums;
+using Services.Interfaces;
 
 namespace Ecommerce.Tests.Helpers;
 
@@ -76,5 +78,11 @@ public static class TestDataSeeder
         context.Orders.Add(order);
         await context.SaveChangesAsync();
         return order;
+    }
+
+    public static async Task<List<User>> SeedDefaultUsersAsync(AppDbContext context, IPasswordHasher passwordHasher, IEncryptionService encryptionService)
+    {
+        await DbSeeder.SeedAsync(context, passwordHasher, encryptionService);
+        return await context.Users.OrderBy(user => user.Id).ToListAsync();
     }
 }

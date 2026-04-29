@@ -19,6 +19,39 @@ public class OrderServiceTests
     }
 
     [Fact]
+    public async Task GetOrderByIdAsync_WhenOwner_ReturnsOrderResponseDto()
+    {
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
+        User user = await TestDataSeeder.CreateUserAsync(context, "getorder@example.com");
+        Product product = await TestDataSeeder.CreateProductAsync(context, "Widget", 50.00m);
+        Order order = await TestDataSeeder.CreateOrderWithItemsAsync(context, user.Id, product, 2);
+
+        OrderService service = BuildService(context);
+
+        OrderResponseDto result = await service.GetOrderByIdAsync(order.Id, user.Email);
+
+        Assert.Equal(order.Id, result.Id);
+        Assert.Equal(order.OrderNumber, result.OrderNumber);
+        Assert.Equal(order.TotalPrice, result.TotalPrice);
+        Assert.Single(result.Items);
+    }
+
+    [Fact]
+    public async Task GetOrderByIdAsync_WhenNotOwner_ThrowsSecurityException()
+    {
+        await using AppDbContext context = TestDbContextFactory.CreateFresh();
+        User owner = await TestDataSeeder.CreateUserAsync(context, "owner-get@example.com");
+        User other = await TestDataSeeder.CreateUserAsync(context, "other-get@example.com");
+        Product product = await TestDataSeeder.CreateProductAsync(context);
+        Order order = await TestDataSeeder.CreateOrderWithItemsAsync(context, owner.Id, product);
+
+        OrderService service = BuildService(context);
+
+        await Assert.ThrowsAsync<System.Security.SecurityException>(
+            () => service.GetOrderByIdAsync(order.Id, other.Email));
+    }
+
+    [Fact]
     public async Task CreateOrderAsync_WithValidData_ReturnsOrderResponseDto()
     {
         await using AppDbContext context = TestDbContextFactory.CreateFresh();
@@ -44,7 +77,7 @@ public class OrderServiceTests
     }
 
     [Fact]
-    public async Task CreateOrderAsync_WithInactiveProduct_ThrowsException()
+    public async Task CreateOrderAsync_WithInactiveProduct_ThrowsInvalidOperationException()
     {
         await using AppDbContext context = TestDbContextFactory.CreateFresh();
         await TestDataSeeder.CreateUserAsync(context, "orderuser2@example.com");
@@ -60,7 +93,7 @@ public class OrderServiceTests
             }
         };
 
-        await Assert.ThrowsAsync<Exception>(() => service.CreateOrderAsync(dto, "orderuser2@example.com"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateOrderAsync(dto, "orderuser2@example.com"));
     }
 
     [Fact]

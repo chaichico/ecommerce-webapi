@@ -5,6 +5,7 @@ using Models.Enums;
 
 public class OrderResponseDto
 {
+    public int Id { get; set; }
     public string OrderNumber {get; set;} = string.Empty;
     public DateTime OrderDate {get; set;}
     [JsonConverter(typeof(JsonStringEnumConverter))]

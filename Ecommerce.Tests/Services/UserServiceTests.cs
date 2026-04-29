@@ -54,7 +54,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task RegisterAsync_WithDuplicateEmail_ThrowsException()
+    public async Task RegisterAsync_WithDuplicateEmail_ThrowsInvalidOperationException()
     {
         await using AppDbContext context = TestDbContextFactory.CreateFresh();
         await TestDataSeeder.CreateUserAsync(context, "duplicate@example.com");
@@ -75,7 +75,7 @@ public class UserServiceTests
             ConfirmPassword = "password123"
         };
 
-        await Assert.ThrowsAsync<Exception>(() => service.RegisterAsync(dto));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.RegisterAsync(dto));
     }
 
     [Fact]

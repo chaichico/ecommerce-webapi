@@ -22,28 +22,28 @@ Date: 2026-04-29
 ## 🟡 IMPORTANT
 
 ### Error Handling: Fix malformed Basic auth header handling
-- [ ] Controllers/AdminController.cs:30 — Wrap `Convert.FromBase64String()` in try/catch
+- [x] Controllers/AdminController.cs:30 — Wrap `Convert.FromBase64String()` in try/catch
 - **Action:** Return 401 Unauthorized on `FormatException` instead of 500
 
 ### Security Hardening: Validate AES key length at initialization
-- [ ] Services/EncryptionService.cs:15 — Add explicit key length validation (16/24/32 bytes)
+- [x] Services/EncryptionService.cs:15 — Add explicit key length validation (16/24/32 bytes)
 - **Action:** Throw `InvalidOperationException` with clear message if invalid
 
 ### Error Handling: Replace generic `Exception` with specific types
-- [ ] Services/OrderService.cs:37 — Use `InvalidOperationException` for invalid state
-- [ ] Services/OrderService.cs:121 — Use `InvalidOperationException` for invalid state
-- [ ] Services/UserService.cs:32 — Use `InvalidOperationException` for invalid state
-- [ ] Services/UserService.cs:101 — Use `InvalidOperationException` for invalid state
+- [x] Services/OrderService.cs:37 — Use `InvalidOperationException` for invalid state
+- [x] Services/OrderService.cs:121 — Use `InvalidOperationException` for invalid state
+- [x] Services/UserService.cs:32 — Use `InvalidOperationException` for invalid state
+- [x] Services/UserService.cs:101 — Use `InvalidOperationException` for invalid state
 - **Action:** Update exception types and audit controller mappings to status codes
 
 ### REST Coverage: Add GET endpoint for single order resource
-- [ ] Controllers/OrdersController.cs — Add `GET /api/orders/{id}` with ownership check
+- [x] Controllers/OrdersController.cs — Add `GET /api/orders/{id}` with ownership check
 - **Action:** Return `OrderResponseDto` with proper DTO mapping
 
 ### Data Protection: Encrypt phone numbers in seeded data
-- [ ] Data/DbSeeder.cs:26 — Encrypt phone before persistence
-- [ ] Data/DbSeeder.cs:34 — Encrypt phone before persistence
-- [ ] Data/DbSeeder.cs:42 — Encrypt phone before persistence
+- [x] Data/DbSeeder.cs:26 — Encrypt phone before persistence
+- [x] Data/DbSeeder.cs:34 — Encrypt phone before persistence
+- [x] Data/DbSeeder.cs:42 — Encrypt phone before persistence
 - **Action:** Inject `IEncryptionService` and encrypt seeded phone values
 
 ---
@@ -51,7 +51,7 @@ Date: 2026-04-29
 ## 🟢 SUGGESTIONS
 
 ### Validation: Increase shipping address minimum length
-- [ ] Models/Dtos/ConfirmOrderDto.cs:8 — Raise `MinLength` from 1 to 10
+- [x] Models/Dtos/ConfirmOrderDto.cs:8 — Raise `MinLength` from 1 to 10
 - **Action:** Consider business alignment on address format validation rules
 
 ---
@@ -62,4 +62,4 @@ Date: 2026-04-29
 - **Important fixes:** 5 (error handling, validation, REST coverage, data protection)
 - **Suggestions:** 1 (validation strengthening)
 
-**Total actionable items:** 13
+**Total actionable items:** 9
