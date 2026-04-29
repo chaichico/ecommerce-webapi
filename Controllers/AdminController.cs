@@ -27,7 +27,16 @@ public class AdminController : ControllerBase
             return false;
 
         string base64Credentials = authHeader["Basic ".Length..].Trim();
-        string credentials = Encoding.UTF8.GetString(Convert.FromBase64String(base64Credentials));
+        string credentials;
+        try
+        {
+            credentials = Encoding.UTF8.GetString(Convert.FromBase64String(base64Credentials));
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+
         string[] parts = credentials.Split(':', 2);
         if (parts.Length != 2)
             return false;

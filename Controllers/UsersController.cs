@@ -23,7 +23,11 @@ public class UsersController : ControllerBase
         try
         {
             UserResponseDto result = await _userService.RegisterAsync(dto);
-            return CreatedAtAction(null, result);
+            return CreatedAtAction(nameof(Register), result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
@@ -42,6 +46,10 @@ public class UsersController : ControllerBase
         catch (UnauthorizedAccessException ex)  
         {
             return Unauthorized(new { message = ex.Message });    // Login failed
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {

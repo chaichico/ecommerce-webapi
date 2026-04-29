@@ -22,6 +22,24 @@ public class OrderService : IOrderService
         _productRepository = productRepository;
     }
 
+    public async Task<OrderResponseDto> GetOrderByIdAsync(int id, string userEmail)
+    {
+        User user = await GetUserByEmailOrThrowAsync(userEmail);
+        Order? order = await _orderRepository.GetByOrderIdAsync(id);
+
+        if (order == null)
+        {
+            throw new KeyNotFoundException("Order not found");
+        }
+
+        if (order.UserId != user.Id)
+        {
+            throw new System.Security.SecurityException("You are not authorized to view this order");
+        }
+
+        return MapOrderResponse(order);
+    }
+
     // Create order function
     public async Task<OrderResponseDto> CreateOrderAsync(CreateOrderDto dto, string userEmail)
     {
@@ -34,7 +52,7 @@ public class OrderService : IOrderService
 
         if (products.Count != productIds.Count)
         {
-            throw new Exception("One or more products not found or inactive");
+            throw new InvalidOperationException("One or more products not found or inactive");
         }
 
         // 3. create ordernumber 
@@ -72,21 +90,7 @@ public class OrderService : IOrderService
         await _orderRepository.CreateAsync(order);
 
         // 8. return response
-        return new OrderResponseDto
-        {
-            OrderNumber = order.OrderNumber,
-            OrderDate = order.OrderDate,
-            Status = order.Status,
-            TotalPrice = order.TotalPrice,
-            Items = orderItems.Select(i => new OrderItemResponseDto
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
-            }).ToList()
-        };
+        return MapOrderResponse(order);
     }
 
     public async Task<OrderResponseDto> UpdateOrderAsync(int id, UpdateOrderDto dto, string userEmail)
@@ -118,7 +122,7 @@ public class OrderService : IOrderService
 
         if (products.Count != productIds.Count)
         {
-            throw new Exception("One or more products not found or inactive");
+            throw new InvalidOperationException("One or more products not found or inactive");
         }
 
         // 6 delete old items and replace with new one
@@ -148,21 +152,7 @@ public class OrderService : IOrderService
         await _orderRepository.UpdateAsync(order);
 
         // 10 return response
-        return new OrderResponseDto
-        {
-            OrderNumber = order.OrderNumber,
-            OrderDate = order.OrderDate,
-            Status = order.Status,
-            TotalPrice = order.TotalPrice,
-            Items = newItems.Select(i => new OrderItemResponseDto
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
-            }).ToList()
-        };
+        return MapOrderResponse(order);
 
     }
 
@@ -221,21 +211,7 @@ public class OrderService : IOrderService
         await _orderRepository.UpdateAsync(order);
 
         // 10. Return response
-        return new OrderResponseDto
-        {
-            OrderNumber = order.OrderNumber,
-            OrderDate = order.OrderDate,
-            Status = order.Status,
-            TotalPrice = order.TotalPrice,
-            Items = order.Items.Select(i => new OrderItemResponseDto
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
-            }).ToList()
-        };
+        return MapOrderResponse(order);
     }
 
     public async Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName)
@@ -264,6 +240,26 @@ public class OrderService : IOrderService
                 SubTotal = i.SubTotal
             }).ToList()
         }).ToList();
+    }
+
+    private static OrderResponseDto MapOrderResponse(Order order)
+    {
+        return new OrderResponseDto
+        {
+            Id = order.Id,
+            OrderNumber = order.OrderNumber,
+            OrderDate = order.OrderDate,
+            Status = order.Status,
+            TotalPrice = order.TotalPrice,
+            Items = order.Items.Select(i => new OrderItemResponseDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                SubTotal = i.SubTotal
+            }).ToList()
+        };
     }
 
     public async Task<List<AdminOrderResponseDto>> ApproveOrdersAsync(ApproveOrdersDto dto)

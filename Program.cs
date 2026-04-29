@@ -11,10 +11,17 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.OpenApi.Models;
 
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+ValidateRequiredSecret(builder.Configuration, "AdminAuth:Username", "__SET_FROM_ENV_ADMINAUTH__USERNAME__");
+ValidateRequiredSecret(builder.Configuration, "AdminAuth:Password", "__SET_FROM_ENV_ADMINAUTH__PASSWORD__");
+ValidateRequiredSecret(builder.Configuration, "Jwt:Key", "__SET_FROM_ENV_JWT__KEY__");
+ValidateRequiredSecret(builder.Configuration, "Encryption:Key", "__SET_FROM_ENV_ENCRYPTION__KEY__");
+
+string jwtKey = builder.Configuration["Jwt:Key"]!;
 
 // DbContext - Use environment variable for server or fallback to config
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         connectionString,
@@ -53,7 +60,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
@@ -124,7 +131,8 @@ using (var scope = app.Services.CreateScope())
     IServiceProvider services = scope.ServiceProvider;
     AppDbContext context = services.GetRequiredService<AppDbContext>();
     IPasswordHasher passwordHasher = services.GetRequiredService<IPasswordHasher>();
-    await DbSeeder.SeedAsync(context, passwordHasher);
+    IEncryptionService encryptionService = services.GetRequiredService<IEncryptionService>();
+    await DbSeeder.SeedAsync(context, passwordHasher, encryptionService);
 }
 
 app.UseSwagger();
@@ -139,3 +147,14 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.Run();
+
+static void ValidateRequiredSecret(IConfiguration configuration, string key, string blockedDefaultValue)
+{
+    string? value = configuration[key];
+    if (string.IsNullOrWhiteSpace(value) || string.Equals(value, blockedDefaultValue, StringComparison.Ordinal))
+    {
+        string environmentVariableName = key.Replace(":", "__");
+        throw new InvalidOperationException(
+            $"Missing required secure configuration for '{key}'. Set '{environmentVariableName}' via environment variable.");
+    }
+}

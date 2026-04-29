@@ -6,7 +6,7 @@ namespace Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AppDbContext context, IPasswordHasher passwordHasher)
+    public static async Task SeedAsync(AppDbContext context, IPasswordHasher passwordHasher, IEncryptionService encryptionService)
     {
         // ตรวจสอบว่ามีข้อมูลอยู่แล้วหรือไม่
         if (await context.Users.AnyAsync() || await context.Products.AnyAsync())
@@ -23,7 +23,7 @@ public static class DbSeeder
                 FirstName = "John",
                 LastName = "Doe",
                 PasswordHash = passwordHasher.HashPassword("Password123!"),
-                PhoneNumber = "081-234-5678"
+                PhoneNumber = encryptionService.Encrypt("081-234-5678")
             },
             new User
             {
@@ -31,7 +31,7 @@ public static class DbSeeder
                 FirstName = "Jane",
                 LastName = "Smith",
                 PasswordHash = passwordHasher.HashPassword("Password123!"),
-                PhoneNumber = "082-345-6789"
+                PhoneNumber = encryptionService.Encrypt("082-345-6789")
             },
             new User
             {
@@ -39,7 +39,7 @@ public static class DbSeeder
                 FirstName = "สมชาย",
                 LastName = "ใจดี",
                 PasswordHash = passwordHasher.HashPassword("Password123!"),
-                PhoneNumber = "083-456-7890"
+                PhoneNumber = encryptionService.Encrypt("083-456-7890")
             }
         };
 

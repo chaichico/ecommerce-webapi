@@ -13,6 +13,10 @@ public class EncryptionService : IEncryptionService
         string keyString = configuration["Encryption:Key"] ?? throw new InvalidOperationException("Encryption:Key is not configured");
         
         _key = Encoding.UTF8.GetBytes(keyString);
+        if (_key.Length != 16 && _key.Length != 24 && _key.Length != 32)
+        {
+            throw new InvalidOperationException("Encryption:Key must be 16, 24, or 32 bytes");
+        }
     }
 
     public string Encrypt(string plainText)
