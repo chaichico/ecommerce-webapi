@@ -23,7 +23,7 @@ public class UsersController : ControllerBase
         try
         {
             UserResponseDto result = await _userService.RegisterAsync(dto);
-            return CreatedAtAction(null, result);
+            return CreatedAtAction(nameof(Register), result);
         }
         catch (Exception ex)
         {
