@@ -14,16 +14,16 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
 
-    public async Task<List<Product>> GetByIdsAsync(List<int> ids)
+    public Task<List<Product>> GetByIds(List<int> ids)
     {
-        return await _context.Products
+        return _context.Products
             .Where(p => ids.Contains(p.Id))
             .ToListAsync();
     }
 
-    public async Task<List<Product>> GetActiveByIdsAsync(List<int> ids)
+    public Task<List<Product>> GetActiveByIds(List<int> ids)
     {
-        return await _context.Products
+        return _context.Products
             .Where(p => ids.Contains(p.Id) && p.IsActive)
             .ToListAsync();
     }

@@ -4,6 +4,6 @@ namespace Repositories.Interfaces;
 
 public interface IProductRepository
 {
-    Task<List<Product>> GetByIdsAsync(List<int> ids);
-    Task<List<Product>> GetActiveByIdsAsync(List<int> ids);
+    Task<List<Product>> GetByIds(List<int> ids);
+    Task<List<Product>> GetActiveByIds(List<int> ids);
 }

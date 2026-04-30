@@ -13,22 +13,21 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<User?> GetByEmailAsync(string email)
+    public Task<User?> GetByEmail(string email)
     {
-        return await _context.Users
+        return _context.Users
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<User> CreateAsync(User user)
+    public Task Create(User user)
     {
         _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-        return user;
+        return _context.SaveChangesAsync();
     }
 
-    public async Task<bool> EmailExistsAsync(string email)
+    public Task<bool> EmailExists(string email)
     {
-        return await _context.Users
+        return _context.Users
             .AnyAsync(u => u.Email == email);
     }
 }

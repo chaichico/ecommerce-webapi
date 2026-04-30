@@ -2,8 +2,8 @@ namespace Repositories.Interfaces;
 using Models.Entities;
 public interface IUserRepository
 {
-    Task<User?> GetByEmailAsync(string email);
-    Task<User> CreateAsync(User user);
-    Task<bool> EmailExistsAsync(string email);
+    Task<User?> GetByEmail(string email);
+    Task Create(User user);
+    Task<bool> EmailExists(string email);
 
 }

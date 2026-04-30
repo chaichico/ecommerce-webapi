@@ -9,7 +9,7 @@ namespace Ecommerce.Tests.Repositories;
 public class OrderRepositoryTests
 {
     [Fact]
-    public async Task CreateAsync_ShouldPersistOrderWithItems()
+    public async Task Create_ShouldPersistOrderWithItems()
     {
         await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
@@ -35,15 +35,15 @@ public class OrderRepositoryTests
         };
 
         OrderRepository repository = new OrderRepository(context);
-        Order created = await repository.CreateAsync(order);
+        await repository.Create(order);
 
-        Assert.True(created.Id > 0);
-        Assert.Equal("ORD-TEST-001", created.OrderNumber);
-        Assert.Single(created.Items);
+        Assert.True(order.Id > 0);
+        Assert.Equal("ORD-TEST-001", order.OrderNumber);
+        Assert.Single(order.Items);
     }
 
     [Fact]
-    public async Task GetByOrderIdAsync_WhenOrderExists_ReturnsOrderWithItems()
+    public async Task GetByOrderId_WhenOrderExists_ReturnsOrderWithItems()
     {
         await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
@@ -51,7 +51,7 @@ public class OrderRepositoryTests
         Order created = await TestDataSeeder.CreateOrderWithItemsAsync(context, user.Id, product);
 
         OrderRepository repository = new OrderRepository(context);
-        Order? result = await repository.GetByOrderIdAsync(created.Id);
+        Order? result = await repository.GetByOrderId(created.Id);
 
         Assert.NotNull(result);
         Assert.Equal(created.Id, result.Id);
@@ -60,18 +60,18 @@ public class OrderRepositoryTests
     }
 
     [Fact]
-    public async Task GetByOrderIdAsync_WhenOrderNotExists_ReturnsNull()
+    public async Task GetByOrderId_WhenOrderNotExists_ReturnsNull()
     {
         await using AppDbContext context = TestDbContextFactory.CreateFresh();
 
         OrderRepository repository = new OrderRepository(context);
-        Order? result = await repository.GetByOrderIdAsync(999);
+        Order? result = await repository.GetByOrderId(999);
 
         Assert.Null(result);
     }
 
     [Fact]
-    public async Task SearchOrdersAsync_ByOrderNumber_ReturnsMatchingOrders()
+    public async Task SearchOrders_ByOrderNumber_ReturnsMatchingOrders()
     {
         await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
@@ -88,31 +88,31 @@ public class OrderRepositoryTests
         await context.SaveChangesAsync();
 
         OrderRepository repository = new OrderRepository(context);
-        List<Order> results = await repository.SearchOrdersAsync("SEARCH", null, null);
+        List<Order> results = await repository.SearchOrders("SEARCH", null, null);
 
         Assert.Single(results);
         Assert.Equal("ORD-SEARCH-ABC", results[0].OrderNumber);
     }
 
     [Fact]
-    public async Task UpdateAsync_ShouldPersistChanges()
+    public async Task Update_ShouldPersistChanges()
     {
         await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
         Order order = await TestDataSeeder.CreateOrderAsync(context, user.Id);
 
         OrderRepository repository = new OrderRepository(context);
-        Order? toUpdate = await repository.GetByOrderIdAsync(order.Id);
+        Order? toUpdate = await repository.GetByOrderId(order.Id);
         Assert.NotNull(toUpdate);
 
         toUpdate.Status = OrderStatus.Confirmed;
-        Order updated = await repository.UpdateAsync(toUpdate);
+        await repository.Update(toUpdate);
 
-        Assert.Equal(OrderStatus.Confirmed, updated.Status);
+        Assert.Equal(OrderStatus.Confirmed, toUpdate.Status);
     }
 
     [Fact]
-    public async Task GetByIdsAsync_ReturnsOrdersMatchingIds()
+    public async Task GetByIds_ReturnsOrdersMatchingIds()
     {
         await using AppDbContext context = TestDbContextFactory.CreateFresh();
         User user = await TestDataSeeder.CreateUserAsync(context);
@@ -120,7 +120,7 @@ public class OrderRepositoryTests
         Order order2 = await TestDataSeeder.CreateOrderAsync(context, user.Id);
 
         OrderRepository repository = new OrderRepository(context);
-        List<Order> results = await repository.GetByIdsAsync(new List<int> { order1.Id, order2.Id });
+        List<Order> results = await repository.GetByIds(new List<int> { order1.Id, order2.Id });
 
         Assert.Equal(2, results.Count);
     }
