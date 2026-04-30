@@ -1,5 +1,6 @@
 using Models.Entities;
-using Models.Dtos;
+using Models.Dtos.Requests;
+using Models.Dtos.Responses;
 using Models.Enums;
 using Repositories.Interfaces;
 using Services.Interfaces;

@@ -1,4 +1,4 @@
-namespace Models.Dtos;
+namespace Models.Dtos.Responses;
 
 public class LoginResponseDto
 {

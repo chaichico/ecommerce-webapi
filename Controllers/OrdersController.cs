@@ -1,7 +1,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Models.Dtos;
+using Models.Dtos.Requests;
+using Models.Dtos.Responses;
 using Services.Interfaces;
 
 namespace Controllers;

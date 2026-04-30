@@ -1,4 +1,4 @@
-namespace Models.Dtos;
+namespace Models.Dtos.Responses;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Models.Enums;
