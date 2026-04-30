@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Models.Dtos;
+namespace Models.Dtos.Requests;
 
 public class CreateOrderDto
 {

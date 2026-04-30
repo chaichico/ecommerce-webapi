@@ -1,4 +1,5 @@
-using Models.Dtos;
+using Models.Dtos.Requests;
+using Models.Dtos.Responses;
 namespace Services.Interfaces;
 
 public interface IUserService

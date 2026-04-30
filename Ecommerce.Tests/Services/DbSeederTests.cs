@@ -1,7 +1,7 @@
 using Data;
 using Ecommerce.Tests.Fakes;
 using Ecommerce.Tests.Helpers;
-using Models;
+using Models.Entities;
 
 namespace Ecommerce.Tests.Services;
 

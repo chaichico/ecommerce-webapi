@@ -1,4 +1,4 @@
-namespace Models.Dtos;
+namespace Models.Dtos.Responses;
 
 // User เข้าถึงไรได้บ้าง
 public class UserResponseDto

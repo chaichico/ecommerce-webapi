@@ -1,6 +1,7 @@
 using Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Models.Dtos;
+using Models.Dtos.Requests;
+using Models.Dtos.Responses;
 
 namespace Controllers;
 

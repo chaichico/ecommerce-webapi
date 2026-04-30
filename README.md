@@ -33,23 +33,26 @@ ecommerce/
 │   └── review-restfulAPI.md
 ├── Models/
 │   ├── Dtos/
-│   │   ├── AdminOrderResponseDto.cs
-│   │   ├── ApproveOrdersDto.cs
-│   │   ├── ConfirmOrderDto.cs
-│   │   ├── CreateOrderDto.cs
-│   │   ├── CreateOrderItemDto.cs
-│   │   ├── LoginDto.cs
-│   │   ├── LoginResponseDto.cs
-│   │   ├── OrderResponseDto.cs
-│   │   ├── RegisterUserDto.cs
-│   │   ├── UpdateOrderDto.cs
-│   │   └── UserResponseDto.cs
+│   │   ├── Requests/
+│   │   │   ├── ApproveOrdersDto.cs
+│   │   │   ├── ConfirmOrderDto.cs
+│   │   │   ├── CreateOrderDto.cs
+│   │   │   ├── CreateOrderItemDto.cs
+│   │   │   ├── LoginDto.cs
+│   │   │   ├── RegisterUserDto.cs
+│   │   │   └── UpdateOrderDto.cs
+│   │   └── Responses/
+│   │       ├── AdminOrderResponseDto.cs
+│   │       ├── LoginResponseDto.cs
+│   │       ├── OrderResponseDto.cs
+│   │       └── UserResponseDto.cs
+│   ├── Entities/
+│   │   ├── Order.cs
+│   │   ├── OrderItem.cs
+│   │   ├── Product.cs
+│   │   └── User.cs
 │   ├── Enums/
 │   │   └── OrderStatus.cs
-│   ├── Order.cs
-│   ├── OrderItem.cs
-│   ├── Product.cs
-│   └── User.cs
 ├── Repositories/
 │   ├── Interfaces/
 │   │   ├── IOrderRepository.cs
@@ -77,9 +80,13 @@ ecommerce/
 │   └── Ecommerce.Tests.csproj
 ├── Migrations/
 │   ├── 20260417090318_InitialCreate.cs
+│   ├── 20260417090318_InitialCreate.Designer.cs
 │   ├── 20260423060405_FixOrderItemProductId.cs
+│   ├── 20260423060405_FixOrderItemProductId.Designer.cs
 │   ├── 20260428041451_SyncLatestModel.cs
+│   ├── 20260428041451_SyncLatestModel.Designer.cs
 │   ├── 20260428082235_ConvertOrderStatusToEnum.cs
+│   ├── 20260428082235_ConvertOrderStatusToEnum.Designer.cs
 │   └── AppDbContextModelSnapshot.cs
 ├── Properties/
 │   └── launchSettings.json
@@ -91,13 +98,12 @@ ecommerce/
 ├── build_output.txt
 ├── ecommerce.csproj
 ├── ecommerce.sln
-├── fix-docker-delay.md
 ├── docker-compose.yml
 └── Dockerfile
 ```
 # RUN WEB API แบบ LOCAL 
 ## 1 Run Database
-docker compose up -d sqlserver
+docker compose up -d db
 
 ## 2 update database (apply migration)
 dotnet ef database update

@@ -1,6 +1,6 @@
 using Data;
 using Microsoft.EntityFrameworkCore;
-using Models;
+using Models.Entities;
 using Repositories.Interfaces;
 
 namespace Repositories;
