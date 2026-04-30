@@ -1,4 +1,4 @@
-using Models;
+using Models.Entities;
 namespace Repositories.Interfaces;
 
 public interface IOrderRepository

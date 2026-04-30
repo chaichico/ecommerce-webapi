@@ -1,7 +1,7 @@
 using Data;
 using Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Models;
+using Models.Entities;
 namespace Repositories;
 
 public class UserRepository : IUserRepository

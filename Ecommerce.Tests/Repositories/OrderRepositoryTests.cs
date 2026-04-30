@@ -1,6 +1,6 @@
 using Data;
 using Ecommerce.Tests.Helpers;
-using Models;
+using Models.Entities;
 using Models.Enums;
 using Repositories;
 

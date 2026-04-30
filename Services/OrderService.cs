@@ -1,4 +1,4 @@
-using Models;
+using Models.Entities;
 using Models.Dtos;
 using Models.Enums;
 using Repositories.Interfaces;

@@ -2,7 +2,7 @@ using Data;
 using Ecommerce.Tests.Fakes;
 using Ecommerce.Tests.Helpers;
 using Microsoft.Extensions.Configuration;
-using Models;
+using Models.Entities;
 using Models.Dtos;
 using Repositories;
 using Services;

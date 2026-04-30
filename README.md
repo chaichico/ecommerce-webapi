@@ -97,7 +97,7 @@ ecommerce/
 ```
 # RUN WEB API แบบ LOCAL 
 ## 1 Run Database
-docker compose up -d sqlserver
+docker compose up -d db
 
 ## 2 update database (apply migration)
 dotnet ef database update

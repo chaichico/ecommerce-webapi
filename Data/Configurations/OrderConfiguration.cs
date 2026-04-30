@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Models;
+using Models.Entities;
 using Models.Enums;
 
 namespace Data.Configurations;

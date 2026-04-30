@@ -1,4 +1,4 @@
-using Models;
+using Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
 using Models.Enums;

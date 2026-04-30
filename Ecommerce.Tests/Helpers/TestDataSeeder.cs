@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Data;
-using Models;
+using Models.Entities;
 using Models.Enums;
 using Services.Interfaces;
 

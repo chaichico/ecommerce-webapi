@@ -1,5 +1,5 @@
 namespace Repositories.Interfaces;
-using Models;
+using Models.Entities;
 public interface IUserRepository
 {
     Task<User?> GetByEmailAsync(string email);
