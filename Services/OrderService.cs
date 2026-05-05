@@ -265,6 +265,19 @@ public class OrderService : IOrderService
 
     public async Task<List<AdminOrderResponseDto>> ApproveOrdersAsync(ApproveOrdersDto dto)
     {
+        // 0. กัน request ที่ส่ง order id ซ้ำมาใน payload เดียวกัน
+        List<int> duplicateIds = dto.OrderIds
+            .GroupBy(id => id)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+
+        if (duplicateIds.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Duplicate order IDs are not allowed: {string.Join(", ", duplicateIds)}");
+        }
+
         // 1. ดึง orders ตาม OrderIds ที่ส่งมา
         List<Order> orders = await _orderRepository.GetByIds(dto.OrderIds);
 
@@ -284,19 +297,27 @@ public class OrderService : IOrderService
                 $"Orders must be confirmed by user before approval. Pending order IDs: {string.Join(", ", pendingIds)}");
         }
 
-        // 4. เก็บเฉพาะ orders ที่ยัง Confirmed
+        // 4. กัน approve ซ้ำ order ที่ถูก approve ไปแล้ว
+        List<int> approvedIds = orders.Where(o => o.Status == OrderStatus.Approved).Select(o => o.Id).ToList();
+        if (approvedIds.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Orders already approved: {string.Join(", ", approvedIds)}");
+        }
+
+        // 5. เก็บเฉพาะ orders ที่ยัง Confirmed
         List<Order> confirmedOrders = orders.Where(o => o.Status == OrderStatus.Confirmed).ToList();
 
-        // 5. เปลี่ยน Status เป็น Approved (stock ถูกหักแล้วตอน Confirm)
+        // 6. เปลี่ยน Status เป็น Approved (stock ถูกหักแล้วตอน Confirm)
         foreach (Order order in confirmedOrders)
         {
             order.Status = OrderStatus.Approved;
         }
 
-        // 6. บันทึกเฉพาะ orders ที่มีการเปลี่ยนแปลง
+        // 7. บันทึกเฉพาะ orders ที่มีการเปลี่ยนแปลง
         await _orderRepository.UpdateRange(confirmedOrders);
 
-        // 7. เตรียม response
+        // 8. เตรียม response
         List<AdminOrderResponseDto> response = orders.Select(o => new AdminOrderResponseDto
         {
             OrderNumber = o.OrderNumber,
