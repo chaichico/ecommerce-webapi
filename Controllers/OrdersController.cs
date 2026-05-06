@@ -44,6 +44,10 @@ public class OrdersController : ControllerBase
         {
             return StatusCode(403, new { message = ex.Message });
         }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "Internal server error" });
+        }
     }
 
     // POST /api/orders
@@ -68,9 +72,13 @@ public class OrdersController : ControllerBase
         {
             return Unauthorized(new {message = ex.Message});
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
             return BadRequest(new {message = ex.Message});
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new {message = "Internal server error"});
         }
     }
 
