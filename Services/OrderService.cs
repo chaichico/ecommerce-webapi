@@ -1,3 +1,4 @@
+using AutoMapper;
 using Models.Entities;
 using Models.Dtos.Requests;
 using Models.Dtos.Responses;
@@ -11,16 +12,19 @@ public class OrderService : IOrderService
     private readonly IOrderRepository _orderRepository;
     private readonly IUserRepository _userRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IMapper _mapper;
 
     // constructor
     public OrderService(
         IOrderRepository orderRepository,
         IUserRepository userRepository,
-        IProductRepository productRepository)
+        IProductRepository productRepository,
+        IMapper mapper)
     {
         _orderRepository = orderRepository;
         _userRepository = userRepository;
         _productRepository = productRepository;
+        _mapper = mapper;
     }
 
     public async Task<OrderResponseDto> GetOrderByIdAsync(int id, string userEmail)
@@ -38,7 +42,7 @@ public class OrderService : IOrderService
             throw new System.Security.SecurityException("You are not authorized to view this order");
         }
 
-        return MapOrderResponse(order);
+        return _mapper.Map<OrderResponseDto>(order);
     }
 
     // Create order function
@@ -91,7 +95,7 @@ public class OrderService : IOrderService
         await _orderRepository.Create(order);
 
         // 8. return response
-        return MapOrderResponse(order);
+        return _mapper.Map<OrderResponseDto>(order);
     }
 
     public async Task<OrderResponseDto> UpdateOrderAsync(int id, UpdateOrderDto dto, string userEmail)
@@ -153,7 +157,7 @@ public class OrderService : IOrderService
         await _orderRepository.Update(order);
 
         // 10 return response
-        return MapOrderResponse(order);
+        return _mapper.Map<OrderResponseDto>(order);
 
     }
 
@@ -212,55 +216,14 @@ public class OrderService : IOrderService
         await _orderRepository.Update(order);
 
         // 10. Return response
-        return MapOrderResponse(order);
+        return _mapper.Map<OrderResponseDto>(order);
     }
 
     public async Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName)
     {
         List<Order> orders = await _orderRepository.SearchOrders(orderNumber, firstName, lastName);
 
-        return orders.Select(o => new AdminOrderResponseDto
-        {
-            OrderNumber = o.OrderNumber,
-            OrderDate = o.OrderDate,
-            Status = o.Status,
-            TotalPrice = o.TotalPrice,
-            ShippingAddress = o.ShippingAddress,
-            User = new AdminUserInfoDto
-            {
-                FirstName = o.User.FirstName,
-                LastName = o.User.LastName,
-                Email = o.User.Email
-            },
-            Items = o.Items.Select(i => new OrderItemResponseDto
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
-            }).ToList()
-        }).ToList();
-    }
-
-    private static OrderResponseDto MapOrderResponse(Order order)
-    {
-        return new OrderResponseDto
-        {
-            Id = order.Id,
-            OrderNumber = order.OrderNumber,
-            OrderDate = order.OrderDate,
-            Status = order.Status,
-            TotalPrice = order.TotalPrice,
-            Items = order.Items.Select(i => new OrderItemResponseDto
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
-            }).ToList()
-        };
+        return _mapper.Map<List<AdminOrderResponseDto>>(orders);
     }
 
     public async Task<List<AdminOrderResponseDto>> ApproveOrdersAsync(ApproveOrdersDto dto)
@@ -318,28 +281,7 @@ public class OrderService : IOrderService
         await _orderRepository.UpdateRange(confirmedOrders);
 
         // 8. เตรียม response
-        List<AdminOrderResponseDto> response = orders.Select(o => new AdminOrderResponseDto
-        {
-            OrderNumber = o.OrderNumber,
-            OrderDate = o.OrderDate,
-            Status = o.Status,
-            TotalPrice = o.TotalPrice,
-            ShippingAddress = o.ShippingAddress,
-            User = new AdminUserInfoDto
-            {
-                FirstName = o.User.FirstName,
-                LastName = o.User.LastName,
-                Email = o.User.Email
-            },
-            Items = o.Items.Select(i => new OrderItemResponseDto
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                SubTotal = i.SubTotal
-            }).ToList()
-        }).ToList();
+        List<AdminOrderResponseDto> response = _mapper.Map<List<AdminOrderResponseDto>>(orders);
 
         // 8. Return response
         return response;
