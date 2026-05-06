@@ -13,11 +13,6 @@ using Microsoft.OpenApi.Models;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-ValidateRequiredSecret(builder.Configuration, "AdminAuth:Username", "__SET_FROM_ENV_ADMINAUTH__USERNAME__");
-ValidateRequiredSecret(builder.Configuration, "AdminAuth:Password", "__SET_FROM_ENV_ADMINAUTH__PASSWORD__");
-ValidateRequiredSecret(builder.Configuration, "Jwt:Key", "__SET_FROM_ENV_JWT__KEY__");
-ValidateRequiredSecret(builder.Configuration, "Encryption:Key", "__SET_FROM_ENV_ENCRYPTION__KEY__");
-
 string jwtKey = builder.Configuration["Jwt:Key"]!;
 
 // DbContext - Use environment variable for server or fallback to config
@@ -32,7 +27,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
                 maxRetryDelay: TimeSpan.FromSeconds(10),
                 errorNumbersToAdd: null);
         }));
-
 
 // Controller
 builder.Services.AddControllers();
@@ -147,14 +141,3 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.Run();
-
-static void ValidateRequiredSecret(IConfiguration configuration, string key, string blockedDefaultValue)
-{
-    string? value = configuration[key];
-    if (string.IsNullOrWhiteSpace(value) || string.Equals(value, blockedDefaultValue, StringComparison.Ordinal))
-    {
-        string environmentVariableName = key.Replace(":", "__");
-        throw new InvalidOperationException(
-            $"Missing required secure configuration for '{key}'. Set '{environmentVariableName}' via environment variable.");
-    }
-}
