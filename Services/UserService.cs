@@ -28,7 +28,7 @@ public class UserService : IUserService
     public async Task<UserResponseDto> RegisterAsync(RegisterUserDto dto)
     {
         // เช็คว่า email ซ้ำไหม
-        if (await _userRepository.EmailExistsAsync(dto.Email))
+        if (await _userRepository.EmailExists(dto.Email))
         {
             throw new InvalidOperationException("Email already exists");
         }
@@ -54,7 +54,7 @@ public class UserService : IUserService
         };
 
         // บันทึกลง database
-        await _userRepository.CreateAsync(user);
+        await _userRepository.Create(user);
 
         // Return DTO (No password)
         return new UserResponseDto
@@ -69,7 +69,7 @@ public class UserService : IUserService
     public async Task<LoginResponseDto> LoginAsync(LoginDto dto)
     {
         //  หา user จาก email
-        User? user = await _userRepository.GetByEmailAsync(dto.Email);
+        User? user = await _userRepository.GetByEmail(dto.Email);
         if (user == null)
         {
             throw new UnauthorizedAccessException("Invalid email or password");

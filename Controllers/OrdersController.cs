@@ -107,7 +107,7 @@ public class OrdersController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return StatusCode(500, new { message = "Internal server error" }); // ✅ แก้ตรงนี้
         }
     }
 

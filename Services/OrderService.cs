@@ -26,7 +26,7 @@ public class OrderService : IOrderService
     public async Task<OrderResponseDto> GetOrderByIdAsync(int id, string userEmail)
     {
         User user = await GetUserByEmailOrThrowAsync(userEmail);
-        Order? order = await _orderRepository.GetByOrderIdAsync(id);
+        Order? order = await _orderRepository.GetByOrderId(id);
 
         if (order == null)
         {
@@ -49,7 +49,7 @@ public class OrderService : IOrderService
 
         // 2. ตรวจและดึง product ทุกตัวจาก DB
         List<int> productIds = dto.Items.Select(i => i.ProductId).ToList();
-        List<Product> products = await _productRepository.GetActiveByIdsAsync(productIds);
+        List<Product> products = await _productRepository.GetActiveByIds(productIds);
 
         if (products.Count != productIds.Count)
         {
@@ -88,7 +88,7 @@ public class OrderService : IOrderService
         };
 
         // 7. save to database
-        await _orderRepository.CreateAsync(order);
+        await _orderRepository.Create(order);
 
         // 8. return response
         return MapOrderResponse(order);
@@ -100,7 +100,7 @@ public class OrderService : IOrderService
         User user = await GetUserByEmailOrThrowAsync(userEmail);
 
         // 2 find User from Id and Include Items
-        Order? order = await _orderRepository.GetByOrderIdAsync(id);
+        Order? order = await _orderRepository.GetByOrderId(id);
         if (order == null)
         {
             throw new KeyNotFoundException("Order not found");
@@ -119,7 +119,7 @@ public class OrderService : IOrderService
 
         // 5 check and pull every Products from Database
         List<int> productIds = dto.Items.Select(i => i.ProductId).ToList();
-        List<Product> products = await _productRepository.GetActiveByIdsAsync(productIds);
+        List<Product> products = await _productRepository.GetActiveByIds(productIds);
 
         if (products.Count != productIds.Count)
         {
@@ -127,7 +127,7 @@ public class OrderService : IOrderService
         }
 
         // 6 delete old items and replace with new one
-        await _orderRepository.RemoveItemsAsync(order.Items);
+        await _orderRepository.RemoveItems(order.Items);
 
         List<OrderItem> newItems = dto.Items.Select(item =>
         {
@@ -150,7 +150,7 @@ public class OrderService : IOrderService
         order.TotalPrice = totalPrice;
 
         // 9 save changes to database
-        await _orderRepository.UpdateAsync(order);
+        await _orderRepository.Update(order);
 
         // 10 return response
         return MapOrderResponse(order);
@@ -163,7 +163,7 @@ public class OrderService : IOrderService
         User user = await GetUserByEmailOrThrowAsync(userEmail);
 
         // 2. หา order จาก id พร้อม Include Items
-        Order? order = await _orderRepository.GetByOrderIdAsync(id);
+        Order? order = await _orderRepository.GetByOrderId(id);
         if (order == null)
         {
             throw new KeyNotFoundException("Order not found");
@@ -183,7 +183,7 @@ public class OrderService : IOrderService
 
         // 5. ดึง products ที่เกี่ยวข้องกับ order items
         List<int> productIds = order.Items.Select(i => i.ProductId).Distinct().ToList();
-        List<Product> products = await _productRepository.GetByIdsAsync(productIds);
+        List<Product> products = await _productRepository.GetByIds(productIds);
 
         // 6. ตรวจสอบ stock ว่าเพียงพอก่อน confirm
         foreach (OrderItem item in order.Items)
@@ -209,7 +209,7 @@ public class OrderService : IOrderService
         order.Status = OrderStatus.Confirmed;
 
         // 9. บันทึกลง DB
-        await _orderRepository.UpdateAsync(order);
+        await _orderRepository.Update(order);
 
         // 10. Return response
         return MapOrderResponse(order);
@@ -217,7 +217,7 @@ public class OrderService : IOrderService
 
     public async Task<List<AdminOrderResponseDto>> SearchOrdersAsync(string? orderNumber, string? firstName, string? lastName)
     {
-        List<Order> orders = await _orderRepository.SearchOrdersAsync(orderNumber, firstName, lastName);
+        List<Order> orders = await _orderRepository.SearchOrders(orderNumber, firstName, lastName);
 
         return orders.Select(o => new AdminOrderResponseDto
         {
@@ -265,8 +265,21 @@ public class OrderService : IOrderService
 
     public async Task<List<AdminOrderResponseDto>> ApproveOrdersAsync(ApproveOrdersDto dto)
     {
+        // 0. กัน request ที่ส่ง order id ซ้ำมาใน payload เดียวกัน
+        List<int> duplicateIds = dto.OrderIds
+            .GroupBy(id => id)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+
+        if (duplicateIds.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Duplicate order IDs are not allowed: {string.Join(", ", duplicateIds)}");
+        }
+
         // 1. ดึง orders ตาม OrderIds ที่ส่งมา
-        List<Order> orders = await _orderRepository.GetByIdsAsync(dto.OrderIds);
+        List<Order> orders = await _orderRepository.GetByIds(dto.OrderIds);
 
         // 2. ตรวจสอบว่าพบ orders ทั้งหมดไหม
         if (orders.Count != dto.OrderIds.Count)
@@ -284,19 +297,27 @@ public class OrderService : IOrderService
                 $"Orders must be confirmed by user before approval. Pending order IDs: {string.Join(", ", pendingIds)}");
         }
 
-        // 4. เก็บเฉพาะ orders ที่ยัง Confirmed
+        // 4. กัน approve ซ้ำ order ที่ถูก approve ไปแล้ว
+        List<int> approvedIds = orders.Where(o => o.Status == OrderStatus.Approved).Select(o => o.Id).ToList();
+        if (approvedIds.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Orders already approved: {string.Join(", ", approvedIds)}");
+        }
+
+        // 5. เก็บเฉพาะ orders ที่ยัง Confirmed
         List<Order> confirmedOrders = orders.Where(o => o.Status == OrderStatus.Confirmed).ToList();
 
-        // 5. เปลี่ยน Status เป็น Approved (stock ถูกหักแล้วตอน Confirm)
+        // 6. เปลี่ยน Status เป็น Approved (stock ถูกหักแล้วตอน Confirm)
         foreach (Order order in confirmedOrders)
         {
             order.Status = OrderStatus.Approved;
         }
 
-        // 6. บันทึกเฉพาะ orders ที่มีการเปลี่ยนแปลง
-        await _orderRepository.UpdateRangeAsync(confirmedOrders);
+        // 7. บันทึกเฉพาะ orders ที่มีการเปลี่ยนแปลง
+        await _orderRepository.UpdateRange(confirmedOrders);
 
-        // 7. เตรียม response
+        // 8. เตรียม response
         List<AdminOrderResponseDto> response = orders.Select(o => new AdminOrderResponseDto
         {
             OrderNumber = o.OrderNumber,
@@ -326,7 +347,7 @@ public class OrderService : IOrderService
 
     private async Task<User> GetUserByEmailOrThrowAsync(string email)
     {
-        User? user = await _userRepository.GetByEmailAsync(email);
+        User? user = await _userRepository.GetByEmail(email);
         if (user == null)
         {
             throw new UnauthorizedAccessException("User not found");
