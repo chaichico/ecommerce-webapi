@@ -2,6 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
+# install EF CLI for migration job container (migrate service uses build stage)
+RUN dotnet tool install --global dotnet-ef --version 10.*
+ENV PATH="$PATH:/root/.dotnet/tools"
+
 # copy csproj แล้ว restore ก่อน (optimize layer)
 COPY ecommerce.csproj ./
 RUN dotnet restore ecommerce.csproj

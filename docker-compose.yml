@@ -1,19 +1,4 @@
 services:
-  webapi:
-    build: .
-    container_name: ecommerce-api
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env
-    environment:
-      # - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
-      - ASPNETCORE_URLS=http://+:8080
-    depends_on:
-      db:
-        condition: service_healthy
-
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver
@@ -31,6 +16,36 @@ services:
       timeout: 5s
       retries: 20
       start_period: 20s
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    container_name: ecommerce-migrate
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    command: ["dotnet", "ef", "database", "update", "--project", "ecommerce.csproj"]
+
+  webapi:
+    build: .
+    container_name: ecommerce-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   sqlserver_data:
