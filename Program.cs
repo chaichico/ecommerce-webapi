@@ -30,7 +30,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Controller
 builder.Services.AddControllers();
-
+// Register UnitOfWork and DbContext transaction support
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Register services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
@@ -40,7 +41,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
-
+// Auto Mapper
+builder.Services.AddAutoMapper(cfg => { }, typeof(Mappings.OrderProfile).Assembly);
 // ← เพิ่ม JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

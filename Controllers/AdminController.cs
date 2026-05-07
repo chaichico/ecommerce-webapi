@@ -72,9 +72,9 @@ public class AdminController : ControllerBase
             List<AdminOrderResponseDto> result = await _orderService.SearchOrdersAsync(orderNumber, firstName, lastName);
             return Ok(result);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new { message = ex.Message });
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
@@ -98,9 +98,9 @@ public class AdminController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new { message = ex.Message });
+            return StatusCode(500, new { message = "Internal server error" }); // ✅ แก้ตรงนี้
         }
     }
 }

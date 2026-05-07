@@ -1,3 +1,4 @@
+using AutoMapper;
 using Services.Interfaces;
 using Models.Entities;
 using Microsoft.Extensions.Configuration;
@@ -16,13 +17,15 @@ public class UserService : IUserService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEncryptionService _encryptionService;
     private readonly IConfiguration _configuration;     // อ่านค่า JWT config
+    private readonly IMapper _mapper;
 
-    public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService, IConfiguration configuration)
+    public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService, IConfiguration configuration, IMapper mapper)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _encryptionService = encryptionService;
         _configuration = configuration;
+        _mapper = mapper;
     }
 
     public async Task<UserResponseDto> RegisterAsync(RegisterUserDto dto)
@@ -57,12 +60,7 @@ public class UserService : IUserService
         await _userRepository.Create(user);
 
         // Return DTO (No password)
-        return new UserResponseDto
-        {
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName
-        };
+        return _mapper.Map<UserResponseDto>(user);
 
     }
 
@@ -87,12 +85,7 @@ public class UserService : IUserService
         return new LoginResponseDto
         {
             Token = token,
-            User = new UserResponseDto
-            {
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName
-            }
+            User = _mapper.Map<UserResponseDto>(user)
         };
     }
 

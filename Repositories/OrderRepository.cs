@@ -31,13 +31,13 @@ public class OrderRepository : IOrderRepository
     public Task Update(Order order)
     {
         _context.Orders.Update(order); // EF core track changes ของ Order แลพ items
-        return _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
     public Task RemoveItems(List<OrderItem> items)
     {
         _context.Set<OrderItem>().RemoveRange(items);
-        return _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
     public Task<List<Order>> SearchOrders(string? orderNumber, string? firstName, string? lastName)

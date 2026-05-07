@@ -35,7 +35,7 @@ public class UserServiceTests
         FakeEncryptionService encryptionService = new FakeEncryptionService();
         IConfiguration configuration = BuildConfiguration();
 
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration);
+        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
 
         RegisterUserDto dto = new RegisterUserDto
         {
@@ -65,7 +65,7 @@ public class UserServiceTests
         FakeEncryptionService encryptionService = new FakeEncryptionService();
         IConfiguration configuration = BuildConfiguration();
 
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration);
+        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
 
         RegisterUserDto dto = new RegisterUserDto
         {
@@ -99,7 +99,7 @@ public class UserServiceTests
         FakeEncryptionService encryptionService = new FakeEncryptionService();
         IConfiguration configuration = BuildConfiguration();
 
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration);
+        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
 
         LoginDto dto = new LoginDto { Email = "login@example.com", Password = "secret" };
         LoginResponseDto result = await service.LoginAsync(dto);
@@ -128,7 +128,7 @@ public class UserServiceTests
         FakeEncryptionService encryptionService = new FakeEncryptionService();
         IConfiguration configuration = BuildConfiguration();
 
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration);
+        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
 
         LoginDto dto = new LoginDto { Email = "login2@example.com", Password = "wrong" };
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.LoginAsync(dto));
@@ -143,7 +143,7 @@ public class UserServiceTests
         FakeEncryptionService encryptionService = new FakeEncryptionService();
         IConfiguration configuration = BuildConfiguration();
 
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration);
+        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
 
         LoginDto dto = new LoginDto { Email = "ghost@example.com", Password = "pass" };
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.LoginAsync(dto));

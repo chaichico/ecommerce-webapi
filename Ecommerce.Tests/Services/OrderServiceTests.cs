@@ -16,7 +16,7 @@ public class OrderServiceTests
         OrderRepository orderRepository = new OrderRepository(context);
         UserRepository userRepository = new UserRepository(context);
         ProductRepository productRepository = new ProductRepository(context);
-        return new OrderService(orderRepository, userRepository, productRepository);
+        return new OrderService(orderRepository, userRepository, productRepository, AutoMapperTestFactory.CreateMapper());
     }
 
     [Fact]
