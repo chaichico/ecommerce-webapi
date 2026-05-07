@@ -41,6 +41,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
       - ASPNETCORE_URLS=http://+:8080
+    volumes:
+      - ./logs:/app/logs
     depends_on:
       db:
         condition: service_healthy

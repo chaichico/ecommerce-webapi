@@ -10,4 +10,5 @@ public class LogEntry
     public string? IpAddress { get; init; }
     public long ElapsedMs { get; init; }
     public string? TraceId { get; init; }
+    public string? ActionName { get; init; }
 }

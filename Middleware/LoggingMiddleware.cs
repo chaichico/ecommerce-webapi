@@ -31,6 +31,9 @@ public class LoggingMiddleware
         string? userName = context.User.FindFirst(ClaimTypes.Name)?.Value
                         ?? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+        // Extract action name from endpoint metadata
+        string? actionName = GetActionName(context);
+
         LogEntry entry = new()
         {
             Timestamp   = DateTimeOffset.UtcNow,
@@ -40,14 +43,46 @@ public class LoggingMiddleware
             UserName    = userName,
             IpAddress   = context.Connection.RemoteIpAddress?.ToString(),
             ElapsedMs   = sw.ElapsedMilliseconds,
-            TraceId     = context.TraceIdentifier
+            TraceId     = context.TraceIdentifier,
+            ActionName  = actionName
         };
 
         // Non-blocking write
         await _channel.WriteAsync(entry);
 
-        // In-memory stats
-        string key = $"{context.Request.Method}:{context.Response.StatusCode}";
-        _summary.Increment(key);
+        // In-memory stats - track success/failed per action
+        if (actionName != null)
+        {
+            if (context.Response.StatusCode >= 200 && context.Response.StatusCode < 400)
+            {
+                _summary.IncrementSuccess(actionName);
+            }
+            else
+            {
+                _summary.IncrementFailed(actionName);
+            }
+        }
+    }
+
+    private static string? GetActionName(HttpContext context)
+    {
+        Endpoint? endpoint = context.GetEndpoint();
+        if (endpoint == null) return null;
+
+        // Try to get controller and action names
+        string? controllerName = endpoint.Metadata
+            .GetMetadata<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>()
+            ?.ControllerName;
+        
+        string? actionMethodName = endpoint.Metadata
+            .GetMetadata<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>()
+            ?.ActionName;
+
+        if (controllerName != null && actionMethodName != null)
+        {
+            return $"API.{controllerName}.{actionMethodName}";
+        }
+
+        return null;
     }
 }

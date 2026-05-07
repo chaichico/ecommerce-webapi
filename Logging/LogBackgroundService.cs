@@ -19,8 +19,8 @@ public class LogBackgroundService : BackgroundService
         await foreach (LogEntry entry in _channel.ReadAllAsync(stoppingToken))
         {
             _logger.LogInformation(
-                "{Method} {Path} → {StatusCode} | TraceId: {TraceId}, IP: {IpAddress}, User: {UserName}, Elapsed: {ElapsedMs}ms",
-                entry.Method, entry.Path, entry.StatusCode, 
+                "{ActionName} {Method} {Path} → {StatusCode} | TraceId: {TraceId}, IP: {IpAddress}, User: {UserName}, Elapsed: {ElapsedMs}ms",
+                entry.ActionName ?? "Unknown", entry.Method, entry.Path, entry.StatusCode, 
                 entry.TraceId, entry.IpAddress, entry.UserName, entry.ElapsedMs);
         }
     }

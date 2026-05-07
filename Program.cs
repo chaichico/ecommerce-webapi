@@ -142,10 +142,10 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddAuthorization();
 // Build app
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Seed Database
-using (var scope = app.Services.CreateScope())
+using (IServiceScope scope = app.Services.CreateScope())
 {
     IServiceProvider services = scope.ServiceProvider;
     AppDbContext context = services.GetRequiredService<AppDbContext>();
