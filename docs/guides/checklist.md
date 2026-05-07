@@ -10,6 +10,7 @@
 - [x] ใช้ EF Core Code First + Migration
 - [x] JWT (user) และ Basic Auth (admin) ทำงานแล้ว
 - [x] มี Unit Tests ฝั่งหลัก
+- [x] มีระบบ High-Performance Logging (Serilog + Channel + Background Service)
 - [ ] ยังขาดงานด้านคุณภาพระบบบางส่วน (integration test, middleware กลาง, docs เพิ่มเติม)
 
 ## Technical Requirements
@@ -38,6 +39,22 @@
 - [x] มี `Dockerfile` แบบ multi-stage
 - [x] มี `docker-compose.yml` พร้อม SQL Server
 - [x] ทดสอบ `docker compose up --build` แบบ end-to-end ล่าสุด
+
+### 5. Logging & Monitoring
+- [x] ติดตั้ง Serilog packages (AspNetCore, Sinks.File, Sinks.Async, Enrichers.Environment, Enrichers.Thread)
+- [x] สร้าง LogEntry model
+- [x] สร้าง ILogChannel และ LogChannel (Channel-based non-blocking)
+- [x] สร้าง LogBackgroundService (Serilog consumer)
+- [x] สร้าง LogSummaryService (PeriodicTimer + ConcurrentDictionary)
+- [x] สร้าง LoggingMiddleware (ดักจับ Request/Response)
+- [x] Configure Serilog ใน Program.cs (JSON formatter, rolling daily, retain 30 วัน)
+- [x] Register logging services เป็น Singleton และ HostedService
+- [x] เพิ่ม LoggingMiddleware ก่อน UseAuthentication
+- [x] Build ผ่านไม่มี error
+- [ ] ทดสอบรัน API และตรวจสอบไฟล์ `logs/audit-YYYYMMDD.json`
+- [ ] ทดสอบรอ 5 นาทีและตรวจสอบไฟล์ `logs/summary-YYYYMMDD.json`
+- [ ] ทดสอบ Graceful Shutdown
+- [ ] ตรวจสอบ performance overhead (ElapsedMs ไม่เพิ่มมากกว่า 1 ms)
 
 ## Business Requirements
 
@@ -85,6 +102,8 @@
 
 ## Next Priorities
 
+- [x] เพิ่มระบบ High-Performance Logging (Serilog + Channel + Background Service) ✅
+- [ ] ทดสอบระบบ Logging ใน production-like environment
 - [ ] เพิ่ม global exception handling middleware + error response format เดียวทั้งระบบ (`{ "message": "..." }`)
 - [ ] เพิ่ม integration tests สำหรับเส้นทางสำคัญ (`register`, `login`, `create/update/confirm order`, `admin approve`)
 - [ ] ปรับ `CreatedAtAction` ให้ผูกกับ GET endpoint จริงหรือใช้ `StatusCode(201, result)` ให้สม่ำเสมอ

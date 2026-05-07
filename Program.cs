@@ -9,9 +9,25 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Logging;
+using Middleware;
 
+// Serilog setup
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithThreadId()
+    .WriteTo.Async(a => a.File(
+        path: "logs/audit-.json",
+        formatter: new Serilog.Formatting.Json.JsonFormatter(),
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30))
+    .CreateLogger();
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 string jwtKey = builder.Configuration["Jwt:Key"]!;
 
@@ -43,6 +59,13 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 // Auto Mapper
 builder.Services.AddAutoMapper(cfg => { }, typeof(Mappings.OrderProfile).Assembly);
+
+// Register Logging Services
+builder.Services.AddSingleton<ILogChannel, LogChannel>();
+builder.Services.AddSingleton<LogSummaryService>();
+builder.Services.AddHostedService<LogBackgroundService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<LogSummaryService>());
+
 // ← เพิ่ม JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -138,6 +161,10 @@ app.UseSwaggerUI(c =>
     c.EnablePersistAuthorization();
 });
 app.UseHttpsRedirection();
+
+// Logging Middleware - must be before Authentication
+app.UseMiddleware<LoggingMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
