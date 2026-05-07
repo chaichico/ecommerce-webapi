@@ -16,7 +16,8 @@ public class ApproveOrdersAsyncTests
         OrderRepository orderRepository = new OrderRepository(context);
         UserRepository userRepository = new UserRepository(context);
         ProductRepository productRepository = new ProductRepository(context);
-        return new OrderService(orderRepository, userRepository, productRepository, AutoMapperTestFactory.CreateMapper());
+        UnitOfWork unitOfWork = new UnitOfWork(context);
+        return new OrderService(orderRepository, userRepository, productRepository, AutoMapperTestFactory.CreateMapper(), unitOfWork);
     }
 
     [Fact]

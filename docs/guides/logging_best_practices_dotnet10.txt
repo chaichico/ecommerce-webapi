@@ -1,0 +1,119 @@
+================================================================
+  Best Practices: High Performance Logging สำหรับ .NET 10
+================================================================
+
+วัตถุประสงค์
+------------
+ระบบ Logging ที่รองรับ High Performance Web API โดยไม่เกิดปัญหา
+File Lock หรือ Concurrency Issue พร้อมรองรับข้อกำหนดทางกฎหมาย (Audit)
+
+
+แนวทาง Architecture (2 Path)
+-----------------------------
+
+PATH 1: Detailed Logging (Audit / ตามกฎหมาย)
+  - ใช้ Serilog + Serilog.Sinks.Async (ต้องใช้ Async wrapper เสมอ)
+  - บันทึก Log เป็น JSON ลงไฟล์
+  - ข้อมูลที่ต้องบันทึก: Timestamp, IP Address, HTTP Method, User, Status Code
+  - ใช้ System.Threading.Channel เป็น Buffer ระหว่าง Middleware กับ Serilog Worker
+
+PATH 2: Summary Statistics (สรุปยอด)
+  - ใช้ ConcurrentDictionary เก็บตัวเลขใน In-Memory (lock-free)
+  - ใช้ PeriodicTimer (ไม่ใช่ System.Timers.Timer) flush ข้อมูลทุก 1-5 นาที
+  - เขียนผลสรุปลงไฟล์หรือ Database
+
+
+Components ที่ใช้
+-----------------
+
+1. Logging Middleware
+   - ดักจับทุก Request และ Response
+   - ส่งข้อมูลเข้า Channel (non-blocking, ไม่รอ disk write)
+   - API Response กลับทันทีโดยไม่ถูก block
+
+2. System.Threading.Channel<T>
+   - แทนที่ Queue ทั่วไป
+   - รองรับ Backpressure และ Bounded Capacity
+   - Async native ไม่ต้องใช้ lock
+   - ป้องกัน Memory ล้นถ้า consumer ช้า
+
+3. BackgroundService (Consumer)
+   - อ่านข้อมูลจาก Channel แบบ Async
+   - ส่งต่อให้ Serilog เพื่อเขียนไฟล์
+   - ทำงานแยกจาก Request pipeline
+
+4. PeriodicTimer
+   - .NET 6+ ขึ้นไป ไม่มี Re-entrancy Issue
+   - Flush stats จาก ConcurrentDictionary ลง file/DB ทุกช่วงเวลา
+
+5. Serilog Configuration
+   - ต้องติดตั้ง: Serilog.Sinks.Async + Serilog.Sinks.File
+   - ต้อง enrich ด้วย: TraceId, SpanId เพื่อ Distributed Tracing
+   - Output format: JSON (เหมาะกับ Audit และ log aggregation tools)
+
+
+สิ่งที่ต้องระวัง
+----------------
+
+1. Serilog Async Sink
+   - แค่ใช้ Serilog ยังไม่พอ ต้องครอบด้วย .Async() wrapper
+   - ไม่งั้น write ยังเป็น Synchronous อยู่
+
+2. PeriodicTimer vs System.Timers.Timer
+   - ใช้ PeriodicTimer เท่านั้น เพราะ Timer ธรรมดาอาจ Fire ซ้อนกันได้
+
+3. Graceful Shutdown
+   - ต้อง handle CancellationToken ให้ถูกต้อง
+   - ให้ BackgroundService Flush log ที่ค้างใน Channel ก่อน app ปิด
+
+4. Log Enrichment
+   - เพิ่ม TraceId / SpanId ทุก log entry
+   - ช่วย correlate log ระหว่าง services ใน distributed system
+
+5. Channel Capacity
+   - กำหนด BoundedCapacity ให้เหมาะสม
+   - ถ้า consumer ช้า channel จะ backpressure ให้ producer ชะลอได้
+
+
+ประสิทธิภาพที่คาดได้
+---------------------
+
+  Metric                        แนวทางนี้        Naive (sync write)
+  ----------------------------  ---------------  ------------------
+  Latency เพิ่มต่อ request      ~0.01 ms         ~5-50 ms
+  Throughput                    สูงมาก           จำกัดด้วย disk I/O
+  File lock issue               ไม่มี            เกิดบ่อย
+  Data loss ถ้า crash           มีโอกาสเล็กน้อย  ไม่มี
+
+
+NuGet Packages ที่ต้องใช้
+--------------------------
+  - Serilog.AspNetCore
+  - Serilog.Sinks.File
+  - Serilog.Sinks.Async
+  - Serilog.Enrichers.Environment
+  - Serilog.Enrichers.Thread
+  - Microsoft.Extensions.Hosting (มีอยู่แล้วใน .NET 10)
+
+
+Data Flow สรุป
+--------------
+
+  HTTP Request
+      |
+      v
+  Logging Middleware  (ดักจับ, ไม่ block)
+      |
+      +---> Channel<LogEntry>  ---> BackgroundService ---> Serilog ---> audit.json
+      |
+      +---> ConcurrentDictionary (นับ in-memory)
+      |           |
+      |     PeriodicTimer ---> Flush ---> summary.json / DB
+      |
+      v
+  API Response (กลับทันที)
+
+
+================================================================
+  จัดทำโดย: สรุปจากการวิเคราะห์ Best Practices .NET 10
+================================================================

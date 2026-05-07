@@ -122,6 +122,17 @@ http://localhost:8080/swagger
 # RUN WEB API แบบ Container
 docker compose up -d --build
 
+# เข้าไป Exec ใน Docker
+cat /app/logs/audit-20260507.json
+cat /app/logs/summary-20260507.json
+
+# โหลด .json ลงมาดู
+docker cp ecommerce-api:/app/logs/audit-<YYYYMMDD>.json ./audit.json
+docker cp ecommerce-api:/app/logs/summary-<YYYYMMDD>.json ./summary.json
+
+# reset logs 
+rm ./logs/audit-20260507.json
+rm ./logs/summary-20260507.json
 
 
 <!-- If no migration file or incase you need to-->
