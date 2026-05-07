@@ -1,6 +1,5 @@
 using AutoMapper;
 using Data;
-using Microsoft.EntityFrameworkCore.Storage;
 using Models.Entities;
 using Models.Dtos.Requests;
 using Models.Dtos.Responses;
@@ -136,11 +135,12 @@ public class OrderService : IOrderService
         }
 
         // 6 delete old items and replace with new one
-        await using IDbContextTransaction tx = await _unitOfWork.BeginTransactionAsync();
-        try
+        await _unitOfWork.ExecuteInTransactionAsync(async () =>
         {
+            // Remove old items
             await _orderRepository.RemoveItems(order.Items);
 
+            // Create new items
             List<OrderItem> newItems = dto.Items.Select(item =>
             {
                 Product product = products.First(p => p.Id == item.ProductId);
@@ -164,13 +164,7 @@ public class OrderService : IOrderService
             // 9 save changes to database (single round-trip)
             await _orderRepository.Update(order);
             await _unitOfWork.SaveChangesAsync();
-            await tx.CommitAsync();
-        }
-        catch
-        {
-            await tx.RollbackAsync();
-            throw;
-        }
+        });
 
         // 10 return response
         return _mapper.Map<OrderResponseDto>(order);
