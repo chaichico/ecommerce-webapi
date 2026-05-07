@@ -1,104 +1,181 @@
-# Refactor: Add Transaction to `UpdateOrderAsync`
+# Refactor: Transaction ใน Service Layer สำหรับ UpdateOrderAsync
 
-## ปัญหา
+## ปัญหาปัจจุบัน
 
-`UpdateOrderAsync` มี 2 database operations แยกกัน:
+`UpdateOrderAsync` เรียก repository 2 ครั้ง และแต่ละ method จัดการ `SaveChangesAsync` เองแยกกัน:
 
 ```
-RemoveItems(order.Items)  →  SaveChangesAsync() ← commit #1
-Update(order)             →  SaveChangesAsync() ← commit #2
+RemoveItems → SaveChangesAsync  ← commit ที่ 1
+Update      → SaveChangesAsync  ← commit ที่ 2
 ```
 
-ถ้า commit #2 fail → items ถูกลบไปแล้วแต่ items ใหม่ไม่ถูกสร้าง → order สูญหาย items ถาวร
+ไม่มี transaction ครอบ ถ้า `Update` ล้มเหลวหลัง `RemoveItems` สำเร็จ ข้อมูลจะอยู่ในสถานะที่ไม่สมบูรณ์ (items ถูกลบแล้วแต่ order ยังไม่ได้อัปเดต)
 
 ---
 
-## แนวทางแก้ไข
+## แนวทางที่เลือก: IUnitOfWork
 
-### วิธีที่เลือก: Transaction ผ่าน `IDbContextTransaction` ใน Repository Layer
-
-ใช้ `AppDbContext.Database.BeginTransactionAsync()` ครอบทั้ง 2 operations ให้เป็น atomic unit เดียว
+Service ไม่ควร inject `AppDbContext` โดยตรง (ละเมิด `Service → Repository → DbContext`)  
+ให้สร้าง `IUnitOfWork` abstraction เพื่อให้ Service ควบคุม save และ transaction ได้โดยไม่รู้จัก EF Core
 
 ---
 
-## ขั้นตอนการแก้ไข
+## ไฟล์ที่ต้องแก้ไขและสิ่งที่ต้องทำ
 
-### Step 1 — เพิ่ม method `UpdateOrderWithItemsAsync` ใน `IOrderRepository`
-
-```csharp
-Task UpdateOrderWithItemsAsync(Order order, List<OrderItem> oldItems, List<OrderItem> newItems);
-```
-
-method นี้รับผิดชอบ:
-1. Begin transaction
-2. RemoveRange(oldItems) + SaveChanges
-3. order.Items = newItems + Update(order) + SaveChanges
-4. Commit
-5. Rollback อัตโนมัติถ้า throw
-
-### Step 2 — Implement ใน `OrderRepository`
+### 1. สร้าง `Data/IUnitOfWork.cs` (ไฟล์ใหม่) [x]
 
 ```csharp
-public async Task UpdateOrderWithItemsAsync(Order order, List<OrderItem> oldItems, List<OrderItem> newItems)
+namespace Data;
+
+public interface IUnitOfWork
 {
-    using Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction =
-        await _context.Database.BeginTransactionAsync();
-
-    _context.Set<OrderItem>().RemoveRange(oldItems);
-    await _context.SaveChangesAsync();
-
-    order.Items = newItems;
-    _context.Orders.Update(order);
-    await _context.SaveChangesAsync();
-
-    await transaction.CommitAsync();
+    Task SaveChangesAsync();
+    Task<IDbContextTransaction> BeginTransactionAsync();
 }
 ```
 
-> ถ้า SaveChangesAsync() ตัวที่ 2 throw → transaction ถูก rollback อัตโนมัติเมื่อ `using` scope จบ
+> ใช้ `Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction`
 
-### Step 3 — แก้ `UpdateOrderAsync` ใน `OrderService`
+---
 
-แทนที่ 2 calls แยก:
+### 2. สร้าง `Data/UnitOfWork.cs` (ไฟล์ใหม่) [x]
 
 ```csharp
-// เดิม (ลบออก)
-await _orderRepository.RemoveItems(order.Items);
-// ... build newItems ...
-await _orderRepository.Update(order);
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+
+namespace Data;
+
+public class UnitOfWork : IUnitOfWork
+{
+    private readonly AppDbContext _context;
+
+    public UnitOfWork(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public Task SaveChangesAsync()
+    {
+        return _context.SaveChangesAsync();
+    }
+
+    public Task<IDbContextTransaction> BeginTransactionAsync()
+    {
+        return _context.Database.BeginTransactionAsync();
+    }
+}
 ```
 
-ด้วย 1 call:
+---
+
+### 3. Register ใน `Program.cs` [x]
 
 ```csharp
-// ใหม่
-await _orderRepository.UpdateOrderWithItemsAsync(order, order.Items, newItems);
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 ```
 
-### Step 4 — ลบ `RemoveItems` ออกจาก Interface และ Repository (ถ้าไม่มีที่อื่นใช้)
+---
 
-ตรวจสอบก่อนว่า `RemoveItems` ถูกใช้ที่อื่นนอกจาก `UpdateOrderAsync` ไหม ถ้าไม่มี ให้ลบทิ้งเพื่อ clean interface
+### 4. แก้ `Repositories/Interfaces/IOrderRepository.cs` [x]
+
+คง `Task` ไว้และ implementation จะ return `Task.CompletedTask` แทน `void`
+
+> `Update` และ `RemoveItems` เปลี่ยนจาก `void` เป็น `Task` เพื่อให้ consistent กับ async interface และ caller สามารถ `await` ได้
+> `Create` และ `UpdateRange` ยังคง `Task` ไว้ก่อน เพราะยังไม่ได้ refactor ใน iteration นี้
 
 ---
 
-## Files ที่ต้องแก้
+### 5. แก้ `Repositories/OrderRepository.cs` [x]
 
-| File | การเปลี่ยนแปลง |
-|------|----------------|
-| `Repositories/Interfaces/IOrderRepository.cs` | เพิ่ม `UpdateOrderWithItemsAsync`, พิจารณาลบ `RemoveItems` |
-| `Repositories/OrderRepository.cs` | Implement `UpdateOrderWithItemsAsync` พร้อม transaction |
-| `Services/OrderService.cs` | แทนที่ 2 calls ด้วย `UpdateOrderWithItemsAsync` ใน `UpdateOrderAsync` |
+ลบ `SaveChangesAsync` ออกจาก `Update` และ `RemoveItems` และเปลี่ยน return type จาก `void` เป็น `Task` โดย return `Task.CompletedTask`:
+
+```csharp
+public Task Update(Order order)
+{
+    _context.Orders.Update(order);
+    return Task.CompletedTask;
+}
+
+public Task RemoveItems(List<OrderItem> items)
+{
+    _context.Set<OrderItem>().RemoveRange(items);
+    return Task.CompletedTask;
+}
+```
+
+> Business logic ไม่เปลี่ยน — repository ยังคงทำหน้าที่ track changes ผ่าน EF Core เหมือนเดิม  
+> เพียงแต่ไม่ persist เอง — `SaveChangesAsync` เป็น responsibility ของ Service แทน
 
 ---
 
-## สิ่งที่ไม่ต้องแก้
+### 6. แก้ `Services/OrderService.cs` [x]
 
-- `ConfirmOrderAsync` — stock + order status ถูก track โดย EF Change Tracker เดียวกัน commit ครั้งเดียวผ่าน `_orderRepository.Update(order)` อยู่แล้ว
-- `ApproveOrdersAsync` — มีแค่ `UpdateRange` ครั้งเดียว
+Inject `IUnitOfWork` และห่อ `UpdateOrderAsync` ด้วย transaction:
+
+#### Constructor
+
+```csharp
+private readonly IUnitOfWork _unitOfWork;
+
+public OrderService(
+    IOrderRepository orderRepository,
+    IUserRepository userRepository,
+    IProductRepository productRepository,
+    IMapper mapper,
+    IUnitOfWork unitOfWork)
+{
+    _orderRepository = orderRepository;
+    _userRepository = userRepository;
+    _productRepository = productRepository;
+    _mapper = mapper;
+    _unitOfWork = unitOfWork;
+}
+```
+
+#### UpdateOrderAsync (เฉพาะส่วน step 6–9) [x]
+
+```csharp
+// 6 delete old items and replace with new one
+await using IDbContextTransaction tx = await _unitOfWork.BeginTransactionAsync();
+try
+{
+        await _orderRepository.RemoveItems(order.Items);
+
+            List<OrderItem> newItems = dto.Items.Select(item =>
+            {
+    decimal totalPrice = newItems.Sum(i => i.UnitPrice * i.Quantity);
+
+    // 8 update order entity
+    order.Items = newItems;
+    order.TotalPrice = totalPrice;
+
+    // 9 save changes to database (single round-trip)
+    await _orderRepository.Update(order);
+    await _unitOfWork.SaveChangesAsync();
+    await tx.CommitAsync();
+}
+catch
+{
+    await tx.RollbackAsync();
+    throw;
+}
+```
 
 ---
 
-## ข้อควรระวัง
+## สรุปการเปลี่ยน Responsibility
 
-- Transaction เปิด connection ค้างไว้ — method นี้ควร complete เร็ว ไม่ทำ I/O อื่นระหว่าง transaction
-- ไม่ต้อง inject `AppDbContext` เข้า `OrderService` โดยตรง — การ implement transaction ควรอยู่ใน Repository Layer เพื่อรักษา dependency direction
+| Layer      | ก่อน                                | หลัง                                      |
+|------------|--------------------------------------|-------------------------------------------|
+| Repository | Stage changes + SaveChangesAsync     | Stage changes เท่านั้น (no save)          |
+| Service    | เรียก repo แล้วจบ                   | ควบคุม transaction boundary + SaveChanges |
+
+---
+
+## ขอบเขตของ Refactor นี้
+
+- **เปลี่ยน**: `RemoveItems`, `Update` ใน `OrderRepository` และ `IOrderRepository`
+- **เพิ่ม**: `IUnitOfWork`, `UnitOfWork`, inject ใน `OrderService`
+- **ไม่เปลี่ยน**: `Create`, `UpdateRange`, `SearchOrders`, `GetByIds`, `GetByOrderId`
+- **ไม่เปลี่ยน**: business logic ใด ๆ ใน service และ repository

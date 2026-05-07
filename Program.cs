@@ -30,7 +30,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Controller
 builder.Services.AddControllers();
-
+// Register UnitOfWork and DbContext transaction support
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Register services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();

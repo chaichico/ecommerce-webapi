@@ -1,4 +1,6 @@
 using AutoMapper;
+using Data;
+using Microsoft.EntityFrameworkCore.Storage;
 using Models.Entities;
 using Models.Dtos.Requests;
 using Models.Dtos.Responses;
@@ -13,18 +15,21 @@ public class OrderService : IOrderService
     private readonly IUserRepository _userRepository;
     private readonly IProductRepository _productRepository;
     private readonly IMapper _mapper;
+    private readonly IUnitOfWork _unitOfWork;
 
     // constructor
     public OrderService(
         IOrderRepository orderRepository,
         IUserRepository userRepository,
         IProductRepository productRepository,
-        IMapper mapper)
+        IMapper mapper,
+        IUnitOfWork unitOfWork)
     {
         _orderRepository = orderRepository;
         _userRepository = userRepository;
         _productRepository = productRepository;
         _mapper = mapper;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<OrderResponseDto> GetOrderByIdAsync(int id, string userEmail)
@@ -131,30 +136,41 @@ public class OrderService : IOrderService
         }
 
         // 6 delete old items and replace with new one
-        await _orderRepository.RemoveItems(order.Items);
-
-        List<OrderItem> newItems = dto.Items.Select(item =>
+        await using IDbContextTransaction tx = await _unitOfWork.BeginTransactionAsync();
+        try
         {
-            Product product = products.First(p => p.Id == item.ProductId);
-            return new OrderItem
+            await _orderRepository.RemoveItems(order.Items);
+
+            List<OrderItem> newItems = dto.Items.Select(item =>
             {
-                OrderId = order.Id,
-                ProductId = product.Id,
-                ProductName = product.ProductName,
-                Quantity = item.Quantity,
-                UnitPrice = product.Price
-            };
-        }).ToList();
+                Product product = products.First(p => p.Id == item.ProductId);
+                return new OrderItem
+                {
+                    OrderId = order.Id,
+                    ProductId = product.Id,
+                    ProductName = product.ProductName,
+                    Quantity = item.Quantity,
+                    UnitPrice = product.Price
+                };
+            }).ToList();
 
-        // 7 calculate TotalPrice again
-        decimal totalPrice = newItems.Sum(i => i.UnitPrice * i.Quantity);
+            // 7 calculate TotalPrice again
+            decimal totalPrice = newItems.Sum(i => i.UnitPrice * i.Quantity);
 
-        // 8 update order entity
-        order.Items = newItems;
-        order.TotalPrice = totalPrice;
+            // 8 update order entity
+            order.Items = newItems;
+            order.TotalPrice = totalPrice;
 
-        // 9 save changes to database
-        await _orderRepository.Update(order);
+            // 9 save changes to database (single round-trip)
+            await _orderRepository.Update(order);
+            await _unitOfWork.SaveChangesAsync();
+            await tx.CommitAsync();
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
 
         // 10 return response
         return _mapper.Map<OrderResponseDto>(order);
@@ -214,6 +230,7 @@ public class OrderService : IOrderService
 
         // 9. บันทึกลง DB
         await _orderRepository.Update(order);
+        await _unitOfWork.SaveChangesAsync();
 
         // 10. Return response
         return _mapper.Map<OrderResponseDto>(order);
