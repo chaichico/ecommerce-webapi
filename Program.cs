@@ -18,8 +18,11 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .Enrich.WithEnvironmentName()
     .Enrich.WithThreadId()
+    .MinimumLevel.Warning()
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
     .WriteTo.Async(a => a.File(
-        path: "logs/audit-.json",
+        path: "logs/app-.json",
         formatter: new Serilog.Formatting.Json.JsonFormatter(),
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 30))
