@@ -1,27 +1,31 @@
+using System.Text.Json;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace Logging;
 
 public class LogBackgroundService : BackgroundService
 {
     private readonly ILogChannel _channel;
-    private readonly ILogger<LogBackgroundService> _logger;
+    private readonly string _auditPath;
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = false
+    };
 
-    public LogBackgroundService(ILogChannel channel, ILogger<LogBackgroundService> logger)
+    public LogBackgroundService(ILogChannel channel, IHostEnvironment env)
     {
         _channel = channel;
-        _logger = logger;
+        string dir = Path.Combine(env.ContentRootPath, "logs");
+        Directory.CreateDirectory(dir);
+        _auditPath = Path.Combine(dir, $"audit-{DateOnly.FromDateTime(DateTime.UtcNow):yyyyMMdd}.json");
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await foreach (LogEntry entry in _channel.ReadAllAsync(stoppingToken))
         {
-            _logger.LogInformation(
-                "{ActionName} {Method} {Path} → {StatusCode} | TraceId: {TraceId}, IP: {IpAddress}, User: {UserName}, Elapsed: {ElapsedMs}ms",
-                entry.ActionName ?? "Unknown", entry.Method, entry.Path, entry.StatusCode, 
-                entry.TraceId, entry.IpAddress, entry.UserName, entry.ElapsedMs);
+            string line = JsonSerializer.Serialize(entry, _jsonOptions);
+            await File.AppendAllTextAsync(_auditPath, line + Environment.NewLine, stoppingToken);
         }
     }
 }
