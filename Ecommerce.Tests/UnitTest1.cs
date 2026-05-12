@@ -1,19 +1,4 @@
-﻿using Data;
-using Ecommerce.Tests.Helpers;
-
+﻿// This file is intentionally empty.
+// Unit tests are written with xUnit + Moq following the AAA pattern.
+// See docs/tasks/test-unit-moq-guide.md for the full guide and test plan.
 namespace Ecommerce.Tests;
-
-public class UnitTest1
-{
-    [Fact]
-    public async Task InMemoryDatabase_ShouldCreateContext_Successfully()
-    {
-        await using AppDbContext context = TestDbContextFactory.CreateFresh();
-
-        Assert.NotNull(context);
-        Assert.NotNull(context.Users);
-        Assert.NotNull(context.Products);
-        Assert.NotNull(context.Orders);
-        Assert.NotNull(context.OrderItems);
-    }
-}
