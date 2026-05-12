@@ -604,35 +604,35 @@ public class UserServiceTests
 
 ### Phase 3 — OrderServiceTests: `CreateOrderAsync` (4 tests)
 
-- [ ] `CreateOrderAsync_UserNotFound_ThrowsKeyNotFoundException`
-- [ ] `CreateOrderAsync_ProductNotActive_ThrowsInvalidOperationException`
-- [ ] `CreateOrderAsync_ValidData_ReturnsOrderResponseDto` (Status=Pending, TotalPrice ถูก)
-- [ ] `CreateOrderAsync_ValidData_CallsRepositoryCreateOnce` (Verify Times.Once)
-- [ ] `dotnet test` → 4/4 pass
+- [x] `CreateOrderAsync_UserNotFound_ThrowsUnauthorizedAccessException` *(actual exception is UnauthorizedAccessException)*
+- [x] `CreateOrderAsync_ProductNotActive_ThrowsInvalidOperationException`
+- [x] `CreateOrderAsync_ValidData_ReturnsOrderResponseDto` (Status=Pending, TotalPrice ถูก)
+- [x] `CreateOrderAsync_ValidData_CallsRepositoryCreateOnce` (Verify Times.Once)
+- [x] `dotnet test` → 4/4 pass
 
 ---
 
 ### Phase 4 — OrderServiceTests: `UpdateOrderAsync` (6 tests)
 
-- [ ] `UpdateOrderAsync_UserNotFound_ThrowsKeyNotFoundException`
-- [ ] `UpdateOrderAsync_OrderNotFound_ThrowsKeyNotFoundException`
-- [ ] `UpdateOrderAsync_NotOwner_ThrowsSecurityException`
-- [ ] `UpdateOrderAsync_NotPending_ThrowsInvalidOperationException`
-- [ ] `UpdateOrderAsync_ProductNotFound_ThrowsInvalidOperationException`
-- [ ] `UpdateOrderAsync_ValidData_ReturnsOrderResponseDto`
-- [ ] `dotnet test` → 6/6 pass
+- [x] `UpdateOrderAsync_UserNotFound_ThrowsUnauthorizedAccessException` *(actual exception is UnauthorizedAccessException)*
+- [x] `UpdateOrderAsync_OrderNotFound_ThrowsKeyNotFoundException`
+- [x] `UpdateOrderAsync_NotOwner_ThrowsSecurityException`
+- [x] `UpdateOrderAsync_NotPending_ThrowsInvalidOperationException`
+- [x] `UpdateOrderAsync_ProductNotFound_ThrowsInvalidOperationException`
+- [x] `UpdateOrderAsync_ValidData_ReturnsOrderResponseDto`
+- [x] `dotnet test` → 6/6 pass
 
 ---
 
 ### Phase 5 — OrderServiceTests: `ConfirmOrderAsync` (6 tests)
 
-- [ ] `ConfirmOrderAsync_UserNotFound_ThrowsKeyNotFoundException`
-- [ ] `ConfirmOrderAsync_OrderNotFound_ThrowsKeyNotFoundException`
-- [ ] `ConfirmOrderAsync_NotOwner_ThrowsSecurityException`
-- [ ] `ConfirmOrderAsync_NotPending_ThrowsInvalidOperationException`
-- [ ] `ConfirmOrderAsync_InsufficientStock_ThrowsInvalidOperationException`
-- [ ] `ConfirmOrderAsync_ValidData_StatusConfirmedAndReturnsDto`
-- [ ] `dotnet test` → 6/6 pass
+- [x] `ConfirmOrderAsync_UserNotFound_ThrowsUnauthorizedAccessException` *(actual exception is UnauthorizedAccessException)*
+- [x] `ConfirmOrderAsync_OrderNotFound_ThrowsKeyNotFoundException`
+- [x] `ConfirmOrderAsync_NotOwner_ThrowsSecurityException`
+- [x] `ConfirmOrderAsync_NotPending_ThrowsInvalidOperationException`
+- [x] `ConfirmOrderAsync_InsufficientStock_ThrowsInvalidOperationException`
+- [x] `ConfirmOrderAsync_ValidData_StatusConfirmedAndReturnsDto`
+- [x] `dotnet test` → 6/6 pass
 
 ---
 
