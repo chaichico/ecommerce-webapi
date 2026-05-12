@@ -7,12 +7,12 @@ RUN dotnet tool install --global dotnet-ef --version 10.*
 ENV PATH="$PATH:/root/.dotnet/tools"
 
 # copy csproj แล้ว restore ก่อน (optimize layer)
-COPY ecommerce.csproj ./
-RUN dotnet restore ecommerce.csproj
+COPY ecommerce/ecommerce.csproj ./ecommerce/
+RUN dotnet restore ecommerce/ecommerce.csproj
 
 # copy ทั้งโปรเจกต์
-COPY . ./
-RUN dotnet publish ecommerce.csproj -c Release -o out
+COPY ecommerce/ ./ecommerce/
+RUN dotnet publish ecommerce/ecommerce.csproj -c Release -o out
 
 # 🔹 Stage 2: Runtime (เบากว่า)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
