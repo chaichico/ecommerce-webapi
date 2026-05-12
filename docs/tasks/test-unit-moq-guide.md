@@ -638,14 +638,14 @@ public class UserServiceTests
 
 ### Phase 6 — OrderService_ApproveTests: `ApproveOrdersAsync` + `SearchOrdersAsync` (7 tests)
 
-- [ ] `ApproveOrdersAsync_DuplicateOrderIds_ThrowsInvalidOperationException`
-- [ ] `ApproveOrdersAsync_OrderNotFound_ThrowsKeyNotFoundException`
-- [ ] `ApproveOrdersAsync_PendingOrder_ThrowsInvalidOperationException`
-- [ ] `ApproveOrdersAsync_AlreadyApproved_ThrowsInvalidOperationException`
-- [ ] `ApproveOrdersAsync_AllConfirmedOrders_ReturnsApprovedDtos`
-- [ ] `SearchOrdersAsync_WithResults_ReturnsAdminOrderResponseDtos`
-- [ ] `SearchOrdersAsync_EmptyResults_ReturnsEmptyList`
-- [ ] `dotnet test` → 7/7 pass
+- [x] `ApproveOrdersAsync_DuplicateOrderIds_ThrowsInvalidOperationException`
+- [x] `ApproveOrdersAsync_OrderNotFound_ThrowsKeyNotFoundException`
+- [x] `ApproveOrdersAsync_PendingOrder_ThrowsInvalidOperationException`
+- [x] `ApproveOrdersAsync_AlreadyApproved_ThrowsInvalidOperationException`
+- [x] `ApproveOrdersAsync_AllConfirmedOrders_ReturnsApprovedDtos`
+- [x] `SearchOrdersAsync_WithResults_ReturnsAdminOrderResponseDtos`
+- [x] `SearchOrdersAsync_EmptyResults_ReturnsEmptyList`
+- [x] `dotnet test` → 7/7 pass
 
 ---
 
