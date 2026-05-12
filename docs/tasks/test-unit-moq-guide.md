@@ -651,14 +651,14 @@ public class UserServiceTests
 
 ### Phase 7 — UserServiceTests: `RegisterAsync` + `LoginAsync` (7 tests)
 
-- [ ] `RegisterAsync_DuplicateEmail_ThrowsInvalidOperationException`
-- [ ] `RegisterAsync_WithPhoneNumber_CallsEncryptOnce`
-- [ ] `RegisterAsync_WithoutPhoneNumber_DoesNotCallEncrypt`
-- [ ] `RegisterAsync_ValidData_CallsHashPasswordOnce`
-- [ ] `LoginAsync_EmailNotFound_ThrowsUnauthorizedAccessException`
-- [ ] `LoginAsync_WrongPassword_ThrowsUnauthorizedAccessException`
-- [ ] `LoginAsync_ValidCredentials_ReturnsLoginResponseDtoWithToken`
-- [ ] `dotnet test` → 7/7 pass
+- [x] `RegisterAsync_DuplicateEmail_ThrowsInvalidOperationException`
+- [x] `RegisterAsync_WithPhoneNumber_CallsEncryptOnce`
+- [x] `RegisterAsync_WithoutPhoneNumber_DoesNotCallEncrypt`
+- [x] `RegisterAsync_ValidData_CallsHashPasswordOnce`
+- [x] `LoginAsync_EmailNotFound_ThrowsUnauthorizedAccessException`
+- [x] `LoginAsync_WrongPassword_ThrowsUnauthorizedAccessException`
+- [x] `LoginAsync_ValidCredentials_ReturnsLoginResponseDtoWithToken`
+- [x] `dotnet test` → 7/7 pass
 
 ---
 
