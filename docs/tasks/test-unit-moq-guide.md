@@ -10,10 +10,11 @@
 7. [Test Coverage Plan — OrderService](#7-test-coverage-plan--orderservice)
 8. [Test Coverage Plan — UserService](#8-test-coverage-plan--userservice)
 9. [ตัวอย่าง Code จริง](#9-ตัวอยาง-code-จริง)
+10. [Implementation Phases](#10-implementation-phases)
 
 ---
 
-## 1. ทำไมต้องใช้ Moq ไม่ใช่ InMemory DB
+## 1. ทำไมต้องใช้ Moq ไม่ใช่ InMemory DB 
 
 | เรื่อง | InMemory DB | Moq (Unit Test) |
 |---|---|---|
@@ -29,7 +30,7 @@ Repository, Mapper, UnitOfWork — ทั้งหมดถูก mock หมด
 
 ---
 
-## 2. ติดตั้ง Package
+## 2. ติดตั้ง Package [x]
 
 เพิ่มใน `Ecommerce.Tests/Ecommerce.Tests.csproj`:
 
@@ -720,3 +721,114 @@ System.NotSupportedException: Unsupported expression...
 Moq.MockException: Expected invocation on the mock once, but was 0 times
 ```
 → Logic ใน service ไม่ได้เรียก method นั้น ตรวจสอบ flow ใหม่
+
+---
+
+## 10. Implementation Phases
+
+> สถานะปัจจุบัน: 29 tests (28 pass / 1 fail), ใช้ InMemory DB — ต้องแปลงเป็น Moq pure unit tests
+
+### สรุปไฟล์ที่มีอยู่
+
+| ไฟล์ | Tests | หมายเหตุ |
+|---|---|---|
+| `Services/OrderServiceTests.cs` | 8 | InMemory DB + TestDataSeeder |
+| `Services/ApproveOrdersAsyncTests.cs` | 3 | InMemory DB |
+| `Services/UserServiceTests.cs` | 5 | InMemory DB + Fakes |
+| `Repositories/*.cs` | 13 | Integration tests — ไม่อยู่ใน scope |
+| `Fakes/`, `Helpers/` | — | ต้องลบออก |
+| ❌ `UpdateOrderAsync_WithValidData` | FAIL | InMemory ไม่รองรับ Transaction |
+
+---
+
+### Phase 1 — ปรับโครงสร้างและติดตั้ง Moq
+
+> เป้าหมาย: โปรเจกต์ build ได้ด้วย Moq, ลบโครงสร้างเก่าทิ้ง
+
+- [x] `dotnet add Ecommerce.Tests/ package Moq`
+- [x] ลบ `PackageReference` ของ `Microsoft.EntityFrameworkCore.InMemory` ออกจาก `.csproj`
+- [x] ลบไฟล์ทั้งหมดใน `Fakes/`
+- [x] ลบไฟล์ทั้งหมดใน `Helpers/`
+- [x] ลบ `UnitTest1.cs`
+- [x] แทนที่ `Services/OrderServiceTests.cs` ด้วย skeleton ใหม่ (mock fields + constructor)
+- [x] แทนที่ `Services/ApproveOrdersAsyncTests.cs` → rename เป็น `OrderService_ApproveTests.cs` พร้อม skeleton
+- [x] แทนที่ `Services/UserServiceTests.cs` ด้วย skeleton ใหม่
+- [x] `dotnet build` ผ่านไม่มี error
+
+---
+
+### Phase 2 — OrderServiceTests: `GetOrderByIdAsync` (4 tests)
+
+- [ ] `GetOrderByIdAsync_UserNotFound_ThrowsKeyNotFoundException`
+- [ ] `GetOrderByIdAsync_OrderNotFound_ThrowsKeyNotFoundException`
+- [ ] `GetOrderByIdAsync_NotOwner_ThrowsSecurityException`
+- [ ] `GetOrderByIdAsync_ValidOwner_ReturnsOrderResponseDto`
+- [ ] `dotnet test` → 4/4 pass
+
+---
+
+### Phase 3 — OrderServiceTests: `CreateOrderAsync` (4 tests)
+
+- [ ] `CreateOrderAsync_UserNotFound_ThrowsKeyNotFoundException`
+- [ ] `CreateOrderAsync_ProductNotActive_ThrowsInvalidOperationException`
+- [ ] `CreateOrderAsync_ValidData_ReturnsOrderResponseDto` (Status=Pending, TotalPrice ถูก)
+- [ ] `CreateOrderAsync_ValidData_CallsRepositoryCreateOnce` (Verify Times.Once)
+- [ ] `dotnet test` → 4/4 pass
+
+---
+
+### Phase 4 — OrderServiceTests: `UpdateOrderAsync` (6 tests)
+
+- [ ] `UpdateOrderAsync_UserNotFound_ThrowsKeyNotFoundException`
+- [ ] `UpdateOrderAsync_OrderNotFound_ThrowsKeyNotFoundException`
+- [ ] `UpdateOrderAsync_NotOwner_ThrowsSecurityException`
+- [ ] `UpdateOrderAsync_NotPending_ThrowsInvalidOperationException`
+- [ ] `UpdateOrderAsync_ProductNotFound_ThrowsInvalidOperationException`
+- [ ] `UpdateOrderAsync_ValidData_ReturnsOrderResponseDto`
+- [ ] `dotnet test` → 6/6 pass
+
+---
+
+### Phase 5 — OrderServiceTests: `ConfirmOrderAsync` (6 tests)
+
+- [ ] `ConfirmOrderAsync_UserNotFound_ThrowsKeyNotFoundException`
+- [ ] `ConfirmOrderAsync_OrderNotFound_ThrowsKeyNotFoundException`
+- [ ] `ConfirmOrderAsync_NotOwner_ThrowsSecurityException`
+- [ ] `ConfirmOrderAsync_NotPending_ThrowsInvalidOperationException`
+- [ ] `ConfirmOrderAsync_InsufficientStock_ThrowsInvalidOperationException`
+- [ ] `ConfirmOrderAsync_ValidData_StatusConfirmedAndReturnsDto`
+- [ ] `dotnet test` → 6/6 pass
+
+---
+
+### Phase 6 — OrderService_ApproveTests: `ApproveOrdersAsync` + `SearchOrdersAsync` (7 tests)
+
+- [ ] `ApproveOrdersAsync_DuplicateOrderIds_ThrowsInvalidOperationException`
+- [ ] `ApproveOrdersAsync_OrderNotFound_ThrowsKeyNotFoundException`
+- [ ] `ApproveOrdersAsync_PendingOrder_ThrowsInvalidOperationException`
+- [ ] `ApproveOrdersAsync_AlreadyApproved_ThrowsInvalidOperationException`
+- [ ] `ApproveOrdersAsync_AllConfirmedOrders_ReturnsApprovedDtos`
+- [ ] `SearchOrdersAsync_WithResults_ReturnsAdminOrderResponseDtos`
+- [ ] `SearchOrdersAsync_EmptyResults_ReturnsEmptyList`
+- [ ] `dotnet test` → 7/7 pass
+
+---
+
+### Phase 7 — UserServiceTests: `RegisterAsync` + `LoginAsync` (7 tests)
+
+- [ ] `RegisterAsync_DuplicateEmail_ThrowsInvalidOperationException`
+- [ ] `RegisterAsync_WithPhoneNumber_CallsEncryptOnce`
+- [ ] `RegisterAsync_WithoutPhoneNumber_DoesNotCallEncrypt`
+- [ ] `RegisterAsync_ValidData_CallsHashPasswordOnce`
+- [ ] `LoginAsync_EmailNotFound_ThrowsUnauthorizedAccessException`
+- [ ] `LoginAsync_WrongPassword_ThrowsUnauthorizedAccessException`
+- [ ] `LoginAsync_ValidCredentials_ReturnsLoginResponseDtoWithToken`
+- [ ] `dotnet test` → 7/7 pass
+
+---
+
+### Phase 8 — Final Verification
+
+- [ ] `dotnet test` ทั้ง solution → **34/34 pass** (20 OrderService + 7 Approve + 7 User)
+- [ ] ตรวจ scenario ใน guide ครบทุกข้อ (sections 7–8)
+- [ ] ไม่มี `using Data;`, `using Repositories;`, `InMemory`, `TestDataSeeder` เหลือในไฟล์ Services ใดๆ

@@ -10,7 +10,7 @@ using Services;
 
 namespace Ecommerce.Tests.Services;
 
-public class OrderServiceTests
+public class OrderService_ApproveTests
 {
     // ── Shared mock fields ──────────────────────────────────────────────
     private readonly Mock<IOrderRepository> _orderRepoMock = new();
@@ -20,7 +20,7 @@ public class OrderServiceTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly OrderService _sut;
 
-    public OrderServiceTests()
+    public OrderService_ApproveTests()
     {
         _sut = new OrderService(
             _orderRepoMock.Object,

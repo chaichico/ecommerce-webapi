@@ -1,18 +1,26 @@
-using Data;
-using Ecommerce.Tests.Fakes;
-using Ecommerce.Tests.Helpers;
+using AutoMapper;
 using Microsoft.Extensions.Configuration;
-using Models.Entities;
 using Models.Dtos.Requests;
 using Models.Dtos.Responses;
-using Repositories;
+using Models.Entities;
+using Moq;
+using Repositories.Interfaces;
 using Services;
+using Services.Interfaces;
 
 namespace Ecommerce.Tests.Services;
 
 public class UserServiceTests
 {
-    private static IConfiguration BuildConfiguration()
+    // ── Shared mock fields ──────────────────────────────────────────────
+    private readonly Mock<IUserRepository> _userRepoMock = new();
+    private readonly Mock<IPasswordHasher> _passwordHasherMock = new();
+    private readonly Mock<IEncryptionService> _encryptionMock = new();
+    private readonly Mock<IMapper> _mapperMock = new();
+    private readonly IConfiguration _configuration;
+    private readonly UserService _sut;
+
+    public UserServiceTests()
     {
         Dictionary<string, string?> configValues = new Dictionary<string, string?>
         {
@@ -21,131 +29,15 @@ public class UserServiceTests
             { "Jwt:Audience", "test-audience" },
             { "Jwt:ExpiryInMinutes", "60" }
         };
-        return new ConfigurationBuilder()
+        _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(configValues)
             .Build();
-    }
 
-    [Fact]
-    public async Task RegisterAsync_WithValidData_ReturnsUserResponseDto()
-    {
-        await using AppDbContext context = TestDbContextFactory.CreateFresh();
-        UserRepository userRepository = new UserRepository(context);
-        FakePasswordHasher passwordHasher = new FakePasswordHasher();
-        FakeEncryptionService encryptionService = new FakeEncryptionService();
-        IConfiguration configuration = BuildConfiguration();
-
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
-
-        RegisterUserDto dto = new RegisterUserDto
-        {
-            Email = "register@example.com",
-            FirstName = "John",
-            LastName = "Doe",
-            Password = "password123",
-            ConfirmPassword = "password123",
-            PhoneNumber = "0812345678"
-        };
-
-        UserResponseDto result = await service.RegisterAsync(dto);
-
-        Assert.Equal("register@example.com", result.Email);
-        Assert.Equal("John", result.FirstName);
-        Assert.Equal("Doe", result.LastName);
-    }
-
-    [Fact]
-    public async Task RegisterAsync_WithDuplicateEmail_ThrowsInvalidOperationException()
-    {
-        await using AppDbContext context = TestDbContextFactory.CreateFresh();
-        await TestDataSeeder.CreateUserAsync(context, "duplicate@example.com");
-
-        UserRepository userRepository = new UserRepository(context);
-        FakePasswordHasher passwordHasher = new FakePasswordHasher();
-        FakeEncryptionService encryptionService = new FakeEncryptionService();
-        IConfiguration configuration = BuildConfiguration();
-
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
-
-        RegisterUserDto dto = new RegisterUserDto
-        {
-            Email = "duplicate@example.com",
-            FirstName = "Jane",
-            LastName = "Doe",
-            Password = "password123",
-            ConfirmPassword = "password123"
-        };
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.RegisterAsync(dto));
-    }
-
-    [Fact]
-    public async Task LoginAsync_WithValidCredentials_ReturnsTokenAndUser()
-    {
-        await using AppDbContext context = TestDbContextFactory.CreateFresh();
-        FakePasswordHasher passwordHasher = new FakePasswordHasher();
-
-        User user = new User
-        {
-            Email = "login@example.com",
-            FirstName = "Login",
-            LastName = "User",
-            PasswordHash = passwordHasher.HashPassword("secret")
-        };
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
-
-        UserRepository userRepository = new UserRepository(context);
-        FakeEncryptionService encryptionService = new FakeEncryptionService();
-        IConfiguration configuration = BuildConfiguration();
-
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
-
-        LoginDto dto = new LoginDto { Email = "login@example.com", Password = "secret" };
-        LoginResponseDto result = await service.LoginAsync(dto);
-
-        Assert.NotEmpty(result.Token);
-        Assert.Equal("login@example.com", result.User.Email);
-    }
-
-    [Fact]
-    public async Task LoginAsync_WithWrongPassword_ThrowsUnauthorizedAccessException()
-    {
-        await using AppDbContext context = TestDbContextFactory.CreateFresh();
-        FakePasswordHasher passwordHasher = new FakePasswordHasher();
-
-        User user = new User
-        {
-            Email = "login2@example.com",
-            FirstName = "Login",
-            LastName = "User",
-            PasswordHash = passwordHasher.HashPassword("correct")
-        };
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
-
-        UserRepository userRepository = new UserRepository(context);
-        FakeEncryptionService encryptionService = new FakeEncryptionService();
-        IConfiguration configuration = BuildConfiguration();
-
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
-
-        LoginDto dto = new LoginDto { Email = "login2@example.com", Password = "wrong" };
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.LoginAsync(dto));
-    }
-
-    [Fact]
-    public async Task LoginAsync_WithNonExistentEmail_ThrowsUnauthorizedAccessException()
-    {
-        await using AppDbContext context = TestDbContextFactory.CreateFresh();
-        UserRepository userRepository = new UserRepository(context);
-        FakePasswordHasher passwordHasher = new FakePasswordHasher();
-        FakeEncryptionService encryptionService = new FakeEncryptionService();
-        IConfiguration configuration = BuildConfiguration();
-
-        UserService service = new UserService(userRepository, passwordHasher, encryptionService, configuration, AutoMapperTestFactory.CreateMapper());
-
-        LoginDto dto = new LoginDto { Email = "ghost@example.com", Password = "pass" };
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.LoginAsync(dto));
+        _sut = new UserService(
+            _userRepoMock.Object,
+            _passwordHasherMock.Object,
+            _encryptionMock.Object,
+            _configuration,
+            _mapperMock.Object);
     }
 }
