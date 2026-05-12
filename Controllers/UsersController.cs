@@ -10,10 +10,13 @@ namespace Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly ILogger<UsersController> _logger;
 
-    public UsersController(IUserService userService)
+    // in line log -> inject ILogger ที่นี่
+    public UsersController(IUserService userService, ILogger<UsersController> logger)
     {
         _userService = userService;
+        _logger = logger;
     }
     // route POST /api/users/register
     [HttpPost("register")]
@@ -41,6 +44,8 @@ public class UsersController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Attempting to log in user with email: {Email}", dto.Email);
+            _logger.LogDebug("Login DTO: {@LoginDto}", dto);
             LoginResponseDto result = await _userService.LoginAsync(dto);
             return Ok(result);  // Login success
         }
@@ -52,8 +57,9 @@ public class UsersController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "An unexpected error occurred while logging in user with email: {Email}", dto.Email);
             return StatusCode(500, new { message = "Internal server error" });
         }
     }
