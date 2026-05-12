@@ -594,11 +594,11 @@ public class UserServiceTests
 
 ### Phase 2 — OrderServiceTests: `GetOrderByIdAsync` (4 tests)
 
-- [ ] `GetOrderByIdAsync_UserNotFound_ThrowsKeyNotFoundException`
-- [ ] `GetOrderByIdAsync_OrderNotFound_ThrowsKeyNotFoundException`
-- [ ] `GetOrderByIdAsync_NotOwner_ThrowsSecurityException`
-- [ ] `GetOrderByIdAsync_ValidOwner_ReturnsOrderResponseDto`
-- [ ] `dotnet test` → 4/4 pass
+- [x] `GetOrderByIdAsync_UserNotFound_ThrowsUnauthorizedAccessException` *(actual exception is UnauthorizedAccessException)*
+- [x] `GetOrderByIdAsync_OrderNotFound_ThrowsKeyNotFoundException`
+- [x] `GetOrderByIdAsync_NotOwner_ThrowsSecurityException`
+- [x] `GetOrderByIdAsync_ValidOwner_ReturnsOrderResponseDto`
+- [x] `dotnet test` → 4/4 pass
 
 ---
 
