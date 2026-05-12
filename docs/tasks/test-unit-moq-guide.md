@@ -1,207 +1,70 @@
 # Unit Test Guide — xUnit + Moq
 
-## สารบัญ
-1. [ทำไมต้องใช้ Moq ไม่ใช่ InMemory DB](#1-ทำไมตองใช-moq-ไมใช-inmemory-db)
-2. [ติดตั้ง Package](#2-ติดตั้ง-package)
-3. [โครงสร้างโปรเจกต์ Test](#3-โครงสรางโปรเจกต-test)
-4. [Naming Convention](#4-naming-convention)
-5. [AAA Pattern](#5-aaa-pattern)
-6. [วิธี Setup Mock ด้วย Moq](#6-วิธี-setup-mock-ดวย-moq)
-7. [Test Coverage Plan — OrderService](#7-test-coverage-plan--orderservice)
-8. [Test Coverage Plan — UserService](#8-test-coverage-plan--userservice)
-9. [ตัวอย่าง Code จริง](#9-ตัวอยาง-code-จริง)
-10. [Implementation Phases](#10-implementation-phases)
+---
+
+## กฎเหล็ก (อ่านทุกครั้งก่อนเขียน test)
+
+> **ห้ามใช้ InMemory DB เด็ดขาดในทุกกรณี**  
+> ถ้าพบโค้ดที่ใช้ `UseInMemoryDatabase`, `Microsoft.EntityFrameworkCore.InMemory`, `TestDbContextFactory`, `TestDataSeeder`, หรือ `AppDbContext` ในไฟล์ `Services/` — ให้ลบออกและเขียนใหม่ด้วย Moq ทันที
+
+- ทดสอบเฉพาะ **Service layer** — mock ทุก dependency (Repository, Mapper, UnitOfWork)
+- ไม่มี DB จริง ไม่มี EF Core context ใน unit test
+- ทุกอย่างสร้างใน `Arrange` ของ test นั้นเอง — ไม่มี shared seeder หรือ helper class
+- Package ที่ใช้: `Moq` เท่านั้น (ไม่มี `Microsoft.EntityFrameworkCore.InMemory` ใน `.csproj`)
 
 ---
 
-## 1. ทำไมต้องใช้ Moq ไม่ใช่ InMemory DB 
+## มาตรฐาน (Quick Reference)
 
-| เรื่อง | InMemory DB | Moq (Unit Test) |
-|---|---|---|
-| ประเภท | Integration Test | Unit Test |
-| ทดสอบอะไร | EF Core + DB Layer + Service ไปพร้อมกัน | Business Logic เพียวๆ |
-| ความเร็ว | ช้ากว่า (สร้าง Context ทุก test) | เร็วมาก |
-| Isolation | ไม่ isolated — มี side effect ระหว่าง layer | Isolated ทุก dependency |
-| เข้าถึงได้แค่ไหน | เฉพาะ scenario ที่ EF Core รองรับ | ควบคุม return value ได้ทุกอย่าง |
-| วัตถุประสงค์ | ตรวจสอบว่า query/mapping ถูกต้อง | ตรวจสอบว่า logic ใน Service ถูกต้อง |
-
-**กฎหลัก**: Unit test ทดสอบ **Service** ทุกโดย mock ทุก dependency  
-Repository, Mapper, UnitOfWork — ทั้งหมดถูก mock หมด ไม่มี DB จริง
-
----
-
-## 2. ติดตั้ง Package [x]
-
-เพิ่มใน `Ecommerce.Tests/Ecommerce.Tests.csproj`:
-
-```xml
-<PackageReference Include="Moq" Version="4.20.72" />
+**โครงสร้างไฟล์**
+```
+Ecommerce.Tests/Services/
+├── OrderServiceTests.cs         ← GetOrderById, CreateOrder, UpdateOrder, ConfirmOrder
+├── OrderService_ApproveTests.cs ← ApproveOrders, SearchOrders
+└── UserServiceTests.cs          ← Register, Login
 ```
 
-ติดตั้งผ่าน terminal:
-
-```bash
-dotnet add Ecommerce.Tests/Ecommerce.Tests.csproj package Moq
+**Naming**
 ```
-
----
-
-## 3. โครงสร้างโปรเจกต์ Test
-
+Class   : {ServiceName}Tests
+Method  : {MethodName}_{Scenario}_{ExpectedOutcome}
 ```
-Ecommerce.Tests/
-├── Services/
-│   ├── OrderServiceTests.cs          ← GetOrderById, CreateOrder, UpdateOrder, ConfirmOrder
-│   ├── OrderService_ApproveTests.cs  ← ApproveOrders (แยกเพราะหลาย case)
-│   └── UserServiceTests.cs           ← Register, Login
-└── Ecommerce.Tests.csproj
-```
-
-**กฎ**: ไม่มี `Helpers/TestDataSeeder`, ไม่มี `Fakes/`, ไม่มี `InMemory DB`  
-ทุกอย่างสร้างใน `Arrange` ของ test นั้นเอง
-
----
-
-## 4. Naming Convention
-
-### Class
-```
-{ServiceName}Tests
-```
-เช่น `OrderServiceTests`, `UserServiceTests`
-
-### Method
-```
-{MethodName}_{Scenario}_{ExpectedOutcome}
-```
-เช่น:
-- `GetOrderByIdAsync_OrderNotFound_ThrowsKeyNotFoundException`
-- `CreateOrderAsync_ValidData_ReturnsOrderResponseDto`
-- `LoginAsync_WrongPassword_ThrowsUnauthorizedAccessException`
-
-**หลักการตั้งชื่อ Scenario:**
 - Happy path → `ValidData`, `WithPhone`, `ConfirmedOrders`
-- Error / edge case → `OrderNotFound`, `NotOwner`, `InsufficientStock`, `DuplicateEmail`
+- Error case → `UserNotFound`, `NotOwner`, `InsufficientStock`, `DuplicateEmail`
 
----
+**AAA Pattern**
+- `Arrange` — setup mock + สร้าง input
+- `Act` — เรียก method เดียว
+- `Assert` — assert สิ่งเดียว หรือใช้ `Assert.ThrowsAsync<T>` สำหรับ exception
 
-## 5. AAA Pattern
-
+**Mock patterns ที่ใช้บ่อย**
 ```csharp
-[Fact]
-public async Task MethodName_Scenario_Expected()
-{
-    // Arrange — เตรียมทุกอย่างก่อน: mock setup, input data, expected values
-    // ...
+// Return object
+mock.Setup(r => r.GetByEmail("x")).ReturnsAsync(new User { ... });
 
-    // Act — เรียก method เดียว บรรทัดเดียว ไม่มีอะไรอื่น
-    // ...
+// Return null
+mock.Setup(r => r.GetByOrderId(99)).ReturnsAsync((Order?)null);
 
-    // Assert — ตรวจผลลัพธ์ ควร assert สิ่งเดียวต่อ test
-    // ...
-}
-```
+// Return Task (void)
+mock.Setup(r => r.Create(It.IsAny<Order>())).Returns(Task.CompletedTask);
 
-### กฎของแต่ละ section
-
-**Arrange**
-- Mock setup ทุก dependency
-- สร้าง input DTO / entity
-- กำหนด expected value ถ้าต้องการ
-
-**Act**
-- เรียก method เดียว
-- ถ้า expect exception ใช้ `await Assert.ThrowsAsync<T>(() => ...)` ใน Assert section แทน
-
-**Assert**
-- Assert **สิ่งเดียว** ต่อ test (หรือกลุ่มที่เกี่ยวกันโดยตรง)
-- ใช้ `_mock.Verify(...)` เพื่อตรวจว่า method ถูกเรียกหรือไม่
-
----
-
-## 6. วิธี Setup Mock ด้วย Moq
-
-### ติดตั้ง Mock
-
-```csharp
-Mock<IOrderRepository> orderRepoMock = new Mock<IOrderRepository>();
-Mock<IUserRepository> userRepoMock = new Mock<IUserRepository>();
-Mock<IProductRepository> productRepoMock = new Mock<IProductRepository>();
-Mock<IMapper> mapperMock = new Mock<IMapper>();
-Mock<IUnitOfWork> unitOfWorkMock = new Mock<IUnitOfWork>();
-```
-
-### สร้าง Service
-
-```csharp
-OrderService sut = new OrderService(
-    orderRepoMock.Object,
-    userRepoMock.Object,
-    productRepoMock.Object,
-    mapperMock.Object,
-    unitOfWorkMock.Object);
-```
-
-> **sut** = System Under Test — ชื่อ convention มาตรฐาน
-
-### Setup Return Value
-
-```csharp
-// Return value
-userRepoMock
-    .Setup(r => r.GetByEmail("test@example.com"))
-    .ReturnsAsync(new User { Id = 1, Email = "test@example.com" });
-
-// Return null (ไม่พบ)
-orderRepoMock
-    .Setup(r => r.GetByOrderId(99))
-    .ReturnsAsync((Order?)null);
-
-// Return list
-productRepoMock
-    .Setup(r => r.GetActiveByIds(It.IsAny<List<int>>()))
-    .ReturnsAsync(new List<Product> { ... });
-```
-
-### Setup Task (void return)
-
-```csharp
-orderRepoMock
-    .Setup(r => r.Create(It.IsAny<Order>()))
-    .Returns(Task.CompletedTask);
-```
-
-### Setup ExecuteInTransactionAsync (IUnitOfWork)
-
-```csharp
+// ExecuteInTransactionAsync — ต้องเรียก callback จริง
 unitOfWorkMock
     .Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>()))
-    .Returns<Func<Task>>(fn => fn());  // เรียก callback จริง
+    .Returns<Func<Task>>(fn => fn());
+
+// Verify ถูกเรียก / ไม่ถูกเรียก
+mock.Verify(r => r.Create(It.IsAny<Order>()), Times.Once);
+mock.Verify(r => r.Update(It.IsAny<Order>()), Times.Never);
 ```
 
-### Verify ว่าถูกเรียก
-
-```csharp
-// ต้องถูกเรียก 1 ครั้ง
-orderRepoMock.Verify(r => r.Create(It.IsAny<Order>()), Times.Once);
-
-// ต้องไม่ถูกเรียกเลย
-orderRepoMock.Verify(r => r.Update(It.IsAny<Order>()), Times.Never);
-```
-
-### It.IsAny vs ค่าจริง
-
-```csharp
-// ใช้ค่าจริงเมื่อต้องการเฉพาะเจาะจง
-.Setup(r => r.GetByEmail("test@example.com"))
-
-// ใช้ It.IsAny เมื่อไม่สนใจค่า (แค่ต้อง return บางอย่าง)
-.Setup(r => r.Create(It.IsAny<Order>()))
-```
+**Error ที่พบบ่อย**
+- `Unsupported expression` → setup ครบทุก method ที่ service เรียก
+- `Expected invocation... but was 0 times` → logic ใน service ไม่ได้เรียก method นั้น ตรวจ flow ใหม่
 
 ---
 
-## 7. Test Coverage Plan — OrderService
+## Test Coverage Plan — OrderService
 
 ### GetOrderByIdAsync(id, userEmail)
 
@@ -264,7 +127,7 @@ orderRepoMock.Verify(r => r.Update(It.IsAny<Order>()), Times.Never);
 
 ---
 
-## 8. Test Coverage Plan — UserService
+## Test Coverage Plan — UserService
 
 ### RegisterAsync(dto)
 
@@ -686,45 +549,7 @@ public class UserServiceTests
 
 ---
 
-## Quick Reference
-
-### Mock pattern ที่ใช้บ่อย
-
-```csharp
-// Return object
-mock.Setup(r => r.GetByEmail("x")).ReturnsAsync(new User { ... });
-
-// Return null
-mock.Setup(r => r.GetByOrderId(0)).ReturnsAsync((Order?)null);
-
-// Return Task (void)
-mock.Setup(r => r.Create(It.IsAny<Order>())).Returns(Task.CompletedTask);
-
-// ExecuteInTransactionAsync — ต้องเรียก callback จริง
-unitOfWorkMock
-    .Setup(u => u.ExecuteInTransactionAsync(It.IsAny<Func<Task>>()))
-    .Returns<Func<Task>>(fn => fn());
-
-// Verify ถูกเรียก
-mock.Verify(r => r.Create(It.IsAny<Order>()), Times.Once);
-mock.Verify(r => r.Update(It.IsAny<Order>()), Times.Never);
-```
-
-### Error message เมื่อ Mock ไม่ครบ
-
-```
-System.NotSupportedException: Unsupported expression...
-```
-→ ตรวจว่า setup ครบทุก method ที่ service เรียก
-
-```
-Moq.MockException: Expected invocation on the mock once, but was 0 times
-```
-→ Logic ใน service ไม่ได้เรียก method นั้น ตรวจสอบ flow ใหม่
-
----
-
-## 10. Implementation Phases
+## Implementation Phases
 
 > สถานะปัจจุบัน: 29 tests (28 pass / 1 fail), ใช้ InMemory DB — ต้องแปลงเป็น Moq pure unit tests
 
@@ -746,13 +571,23 @@ Moq.MockException: Expected invocation on the mock once, but was 0 times
 > เป้าหมาย: โปรเจกต์ build ได้ด้วย Moq, ลบโครงสร้างเก่าทิ้ง
 
 - [x] `dotnet add Ecommerce.Tests/ package Moq`
-- [x] ลบ `PackageReference` ของ `Microsoft.EntityFrameworkCore.InMemory` ออกจาก `.csproj`
 - [x] ลบไฟล์ทั้งหมดใน `Fakes/`
 - [x] ลบไฟล์ทั้งหมดใน `Helpers/`
 - [x] ลบ `UnitTest1.cs`
 - [x] แทนที่ `Services/OrderServiceTests.cs` ด้วย skeleton ใหม่ (mock fields + constructor)
 - [x] แทนที่ `Services/ApproveOrdersAsyncTests.cs` → rename เป็น `OrderService_ApproveTests.cs` พร้อม skeleton
 - [x] แทนที่ `Services/UserServiceTests.cs` ด้วย skeleton ใหม่
+- [x] `dotnet build` ผ่านไม่มี error
+
+---
+
+### Phase 1.5 — ลบ Repositories Tests และ InMemory Package
+
+> เป้าหมาย: ไม่มี InMemory ในโปรเจกต์เลย, `dotnet build` ยังผ่าน
+
+- [x] ลบ `Repositories/OrderRepositoryTests.cs` (integration test — ไม่อยู่ใน scope)
+- [x] ลบ `Repositories/UserRepositoryTests.cs` (integration test — ไม่อยู่ใน scope)
+- [x] ลบ `PackageReference` ของ `Microsoft.EntityFrameworkCore.InMemory` ออกจาก `.csproj`
 - [x] `dotnet build` ผ่านไม่มี error
 
 ---
