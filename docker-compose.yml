@@ -20,7 +20,7 @@ services:
   migrate:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ecommerce/Dockerfile
       target: build
     container_name: ecommerce-migrate
     env_file:
@@ -29,10 +29,12 @@ services:
       db:
         condition: service_healthy
     restart: "no"
-    command: ["dotnet", "ef", "database", "update", "--project", "ecommerce.csproj"]
+    command: ["dotnet", "ef", "database", "update", "--project", "ecommerce/ecommerce.csproj"]
 
   webapi:
-    build: .
+    build:
+      context: .
+      dockerfile: ecommerce/Dockerfile
     container_name: ecommerce-api
     ports:
       - "8080:8080"
