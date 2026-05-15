@@ -3,6 +3,19 @@
 **Target:** `UserService.GenerateJwtToken` — Branch coverage 50% → 100%  
 **File:** `Ecommerce.Tests/Services/UserServiceTests.cs`
 
+## ✅ Status: COMPLETED
+
+**Changes Made:**
+- ✅ Added helper method `BuildSutWithConfig()` for custom configuration
+- ✅ Added helper method `SetupValidLoginMocks()` to reduce code duplication
+- ✅ Added test: `LoginAsync_MissingJwtKey_ThrowsInvalidOperationException`
+- ✅ Added test: `LoginAsync_MissingJwtIssuer_ThrowsInvalidOperationException`
+- ✅ Added test: `LoginAsync_MissingJwtAudience_ThrowsInvalidOperationException`
+- ✅ Added test: `LoginAsync_MissingExpiryInMinutes_UsesDefaultAndReturnsToken`
+- ✅ All 11 UserService tests passing
+
+**Result:** Branch coverage improved from 50% → 100% (8/8 branches covered)
+
 ---
 
 ## Root Cause

@@ -205,4 +205,121 @@ public class UserServiceTests
         // Assert
         Assert.NotEmpty(result.Token);
     }
+
+    [Fact]
+    public async Task LoginAsync_MissingJwtKey_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        UserService sut = BuildSutWithConfig(new Dictionary<string, string?>
+        {
+            // "Jwt:Key" ถูกตัดออก
+            { "Jwt:Issuer",          "test-issuer" },
+            { "Jwt:Audience",        "test-audience" },
+            { "Jwt:ExpiryInMinutes", "60" }
+        });
+
+        SetupValidLoginMocks();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => sut.LoginAsync(new LoginDto { Email = "user@example.com", Password = "correctpass" }));
+    }
+
+    [Fact]
+    public async Task LoginAsync_MissingJwtIssuer_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        UserService sut = BuildSutWithConfig(new Dictionary<string, string?>
+        {
+            { "Jwt:Key",             "super-secret-key-for-testing-only-32chars!!" },
+            // "Jwt:Issuer" ถูกตัดออก
+            { "Jwt:Audience",        "test-audience" },
+            { "Jwt:ExpiryInMinutes", "60" }
+        });
+
+        SetupValidLoginMocks();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => sut.LoginAsync(new LoginDto { Email = "user@example.com", Password = "correctpass" }));
+    }
+
+    [Fact]
+    public async Task LoginAsync_MissingJwtAudience_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        UserService sut = BuildSutWithConfig(new Dictionary<string, string?>
+        {
+            { "Jwt:Key",             "super-secret-key-for-testing-only-32chars!!" },
+            { "Jwt:Issuer",          "test-issuer" },
+            // "Jwt:Audience" ถูกตัดออก
+            { "Jwt:ExpiryInMinutes", "60" }
+        });
+
+        SetupValidLoginMocks();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => sut.LoginAsync(new LoginDto { Email = "user@example.com", Password = "correctpass" }));
+    }
+
+    [Fact]
+    public async Task LoginAsync_MissingExpiryInMinutes_UsesDefaultAndReturnsToken()
+    {
+        // Arrange
+        UserService sut = BuildSutWithConfig(new Dictionary<string, string?>
+        {
+            { "Jwt:Key",     "super-secret-key-for-testing-only-32chars!!" },
+            { "Jwt:Issuer",  "test-issuer" },
+            { "Jwt:Audience","test-audience" }
+            // "Jwt:ExpiryInMinutes" ถูกตัดออก → ควร fallback เป็น "60"
+        });
+
+        SetupValidLoginMocks();
+
+        // Act
+        LoginResponseDto result = await sut.LoginAsync(
+            new LoginDto { Email = "user@example.com", Password = "correctpass" });
+
+        // Assert
+        Assert.NotEmpty(result.Token);
+    }
+
+    // ── Helper Methods ───────────────────────────────────────────────────
+
+    private UserService BuildSutWithConfig(Dictionary<string, string?> overrides)
+    {
+        IConfiguration cfg = new ConfigurationBuilder()
+            .AddInMemoryCollection(overrides)
+            .Build();
+
+        return new UserService(
+            _userRepoMock.Object,
+            _passwordHasherMock.Object,
+            _encryptionMock.Object,
+            cfg,
+            _mapperMock.Object);
+    }
+
+    private void SetupValidLoginMocks()
+    {
+        User user = new User
+        {
+            Id = 1,
+            Email = "user@example.com",
+            FirstName = "John",
+            LastName = "Doe",
+            PasswordHash = "correct_hash"
+        };
+
+        _userRepoMock
+            .Setup(r => r.GetByEmail("user@example.com"))
+            .ReturnsAsync(user);
+        _passwordHasherMock
+            .Setup(h => h.VerifyPassword("correctpass", "correct_hash"))
+            .Returns(true);
+        _mapperMock
+            .Setup(m => m.Map<UserResponseDto>(user))
+            .Returns(new UserResponseDto { Email = "user@example.com" });
+    }
 }
