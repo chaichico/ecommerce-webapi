@@ -19,6 +19,7 @@ public class UserService : IUserService
     private readonly IConfiguration _configuration;     // อ่านค่า JWT config
     private readonly IMapper _mapper;
 
+    // constructor
     public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService, IConfiguration configuration, IMapper mapper)
     {
         _userRepository = userRepository;

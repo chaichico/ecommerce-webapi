@@ -13,6 +13,7 @@ public class UsersController : ControllerBase
     private readonly ILogger<UsersController> _logger;
 
     // in line log -> inject ILogger ที่นี่
+    // constructor
     public UsersController(IUserService userService, ILogger<UsersController> logger)
     {
         _userService = userService;

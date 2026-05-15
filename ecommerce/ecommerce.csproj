@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Ecommerce.Tests\**" />
+    <Compile Remove="Ecommerce.Tests\**" /> <!-- ไม่เอา code ใน test มารวม ป้องกัน Package Conflict -->
   </ItemGroup>
 
   <ItemGroup>

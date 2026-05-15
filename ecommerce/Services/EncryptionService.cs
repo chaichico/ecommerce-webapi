@@ -6,7 +6,7 @@ using System.Text;
 public class EncryptionService : IEncryptionService
 {
     private readonly byte[] _key;
-
+    // constructor
     public EncryptionService(IConfiguration configuration)
     {
         // อ่าน key จาก appsettings หรือ ENV

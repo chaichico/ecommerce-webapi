@@ -12,16 +12,19 @@ namespace Ecommerce.Tests.Services;
 
 public class OrderServiceTests
 {
-    // ── Shared mock fields ──────────────────────────────────────────────
+    // 1. เตรียม Mock Object ยังไม่ได้ Inject
     private readonly Mock<IOrderRepository> _orderRepoMock = new();
     private readonly Mock<IUserRepository> _userRepoMock = new();
     private readonly Mock<IProductRepository> _productRepoMock = new();
     private readonly Mock<IMapper> _mapperMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
-    private readonly OrderService _sut;
+    private readonly OrderService _sut; // ระบบที่เราจะ test
 
+    // 2. constructor test
     public OrderServiceTests()
     {
+        // 3. inject fake dependencies into the SUT (System Under Test)
+        // SUT คือ OrderService ที่เราจะทดสอบนั่นเอง
         _sut = new OrderService(
             _orderRepoMock.Object,
             _userRepoMock.Object,
@@ -30,6 +33,7 @@ public class OrderServiceTests
             _unitOfWorkMock.Object);
     }
 
+    // 4. รัน test 
     // ── GetOrderByIdAsync ────────────────────────────────────────────────
 
     [Fact]

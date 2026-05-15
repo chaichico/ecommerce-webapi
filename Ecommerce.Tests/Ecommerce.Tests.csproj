@@ -9,7 +9,9 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" /> <!-- Code coverage collector -->
+    
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" /> <!-- Required for running tests -->
+
     <PackageReference Include="Moq" Version="4.20.72" /> <!-- Mocking -->
     <PackageReference Include="xunit" Version="2.9.3" /> <!-- Unit testing framework -->
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" /> <!-- xUnit test runner for Visual Studio -->
@@ -20,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ecommerce\ecommerce.csproj" />
+    <ProjectReference Include="..\ecommerce\ecommerce.csproj" /> <!-- ดึง code จากโปรเจคหลัก -->
   </ItemGroup>
 
 </Project>
