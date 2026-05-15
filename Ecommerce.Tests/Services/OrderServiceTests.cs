@@ -448,6 +448,37 @@ public class OrderServiceTests
     }
 
     [Fact]
+    public async Task ConfirmOrderAsync_ProductNotFound_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        User user = new User { Id = 1, Email = "user@example.com" };
+
+        OrderItem item = new OrderItem { ProductId = 1, ProductName = "Widget", Quantity = 2 };
+        Order order = new Order
+        {
+            Id = 5,
+            UserId = 1,
+            Status = OrderStatus.Pending,
+            Items = new List<OrderItem> { item }
+        };
+
+        _userRepoMock.Setup(r => r.GetByEmail("user@example.com")).ReturnsAsync(user);
+        _orderRepoMock.Setup(r => r.GetByOrderId(5)).ReturnsAsync(order);
+        _productRepoMock
+            .Setup(r => r.GetByIds(It.IsAny<List<int>>()))
+            .ReturnsAsync(new List<Product>()); // Product ถูกลบไปแล้ว
+
+        ConfirmOrderDto dto = new ConfirmOrderDto { ShippingAddress = "123 Test Street City" };
+
+        // Act & Assert
+        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _sut.ConfirmOrderAsync(5, dto, "user@example.com"));
+
+        Assert.Contains("Insufficient stock for 'Widget'", ex.Message);
+        Assert.Contains("required 2, available 0", ex.Message);
+    }
+
+    [Fact]
     public async Task ConfirmOrderAsync_InsufficientStock_ThrowsInvalidOperationException()
     {
         // Arrange
@@ -472,8 +503,11 @@ public class OrderServiceTests
         ConfirmOrderDto dto = new ConfirmOrderDto { ShippingAddress = "123 Test Street City" };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(
             () => _sut.ConfirmOrderAsync(5, dto, "user@example.com"));
+
+        Assert.Contains("Insufficient stock for 'Widget'", ex.Message);
+        Assert.Contains("required 10, available 3", ex.Message);
     }
 
     [Fact]

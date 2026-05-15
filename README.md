@@ -64,6 +64,8 @@ docker compose up -d --build
 cat /app/logs/audit-20260507.json
 cat /app/logs/summary-20260507.json
 
+# Test coverage
+dotnet test --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
 <!-- If no migration file or incase you need to-->
 ## สร้าง migration ใหม่
